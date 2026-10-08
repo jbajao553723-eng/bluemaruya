@@ -68,6 +68,7 @@ function createShelf(title,subtitle,movies,ranked=false){
 function updateHero(movie){
   if(!movie)return;
   const image=$('.hero-image');image.src=assetUrl(movie.backdrop||movie.image);image.alt=`${movie.title} backdrop`;
+  const content=$('.hero-content');content.classList.toggle('long-title',movie.title.length>17);content.classList.toggle('very-long-title',movie.title.length>30);
   $('#heroTitle').textContent=movie.title;
   $('.hero-meta').replaceChildren(...[movie.year,movie.rating,movie.runtime,movie.genres?.[0]].filter(Boolean).map((label,index)=>{const span=document.createElement('span');span.textContent=label;if(index===1)span.className='certificate';return span;}));
   $('.hero-description').textContent=movie.description;
