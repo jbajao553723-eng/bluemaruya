@@ -1,2 +1,7 @@
 .sites-stage/
 site-package*
+.vercel/
+.sites-runtime/
+.env
+.env.*
+!.env.example

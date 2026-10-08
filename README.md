@@ -21,6 +21,17 @@ Posters and TV season artwork are sourced from the corresponding English Wikiped
 
 The original generated concept hero is retained in `dist/assets/noir-hero.png` but is no longer used by the page.
 
-## Hosting
+## Deploy to Vercel
 
-`.openai/hosting.json` identifies the existing private Sites deployment and its static output directory. Other static hosts can serve `dist/` directly.
+Import [jbajao553723-eng/bluemaruya](https://github.com/jbajao553723-eng/bluemaruya) from GitHub into Vercel. Use the repository root as the Root Directory and deploy the `main` branch.
+
+`vercel.json` configures these settings automatically:
+
+- Framework Preset: Other
+- Build Command: none
+- Install Command: none
+- Output Directory: `dist`
+
+This is a static HTML, CSS, and JavaScript site. No dependencies or API keys are required for the current version. Vercel assigns the deployed project its own URL; a custom domain can be added in the Vercel dashboard.
+
+The ChatGPT Sites configuration has been removed. The application has no dependency on ChatGPT hosting and no login or registration flow.

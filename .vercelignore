@@ -1,0 +1,7 @@
+.git
+.openai
+.sites-stage
+.sites-runtime
+site-package*
+scripts
+README.md
