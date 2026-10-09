@@ -1,0 +1,40 @@
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+process.env.AUTH_SESSION_SECRET = crypto.randomBytes(32).toString('hex');
+const handler = require('../api/auth');
+const tmdb = require('../api/tmdb');
+const { getSession } = require('../lib/session');
+const origin = 'https://bluemaruya.vercel.app';
+const headers = { host: 'bluemaruya.vercel.app', origin, 'content-type': 'application/json', 'x-forwarded-proto': 'https' };
+async function call(method, body, extra = {}, fn = handler) {
+  const req = { method, body, query: {}, headers: { ...headers, ...extra } };
+  const res = { headers: {}, setHeader(key, value) { this.headers[key] = value; }, end(value) { this.body = JSON.parse(value); } };
+  await fn(req, res);return res;
+}
+(async()=>{
+  assert.equal((await call('GET')).body.authenticated, false);
+  assert.equal((await call('GET', null, {}, tmdb)).statusCode, 401);
+  assert.equal((await call('POST', { username: 'someone', password: 'wrong' })).statusCode, 401);
+  const password = process.env.TEST_LOGIN_PASSWORD;
+  assert.ok(password, 'TEST_LOGIN_PASSWORD is required');
+  assert.equal((await call('POST', { username: 'someone', password })).statusCode, 401);
+  const valid = await call('POST', { username: 'wakengwapo', password });
+  assert.equal(valid.statusCode, 200);
+  const cookie = valid.headers['Set-Cookie'];
+  assert.match(cookie, /HttpOnly/);assert.match(cookie, /SameSite=Strict/);assert.match(cookie, /Secure/);
+  assert.equal(valid.headers['Cache-Control'], 'no-store');
+  assert.equal((await call('GET', null, {cookie})).body.authenticated, true);
+  assert.equal((await call('GET', null, {cookie:cookie.replace('blue_maruya_session=', 'blue_maruya_session=x')})).body.authenticated, false);
+  const expired = Buffer.from(JSON.stringify({ user: 'wakengwapo', exp: 1 })).toString('base64url');
+  const key = Buffer.from(crypto.hkdfSync('sha256', process.env.AUTH_SESSION_SECRET, 'blue-maruya-v1', 'member-session', 32));
+  const sig = crypto.createHmac('sha256', key).update(expired).digest('base64url');
+  assert.equal(getSession({headers:{cookie:'blue_maruya_session='+expired+'.'+sig}}),null);
+  assert.equal((await call('POST', {username:'wakengwapo',password},{origin:'https://example.com'})).statusCode,403);
+  assert.equal((await call('DELETE', null, {origin:'https://example.com'})).statusCode,403);
+  assert.match((await call('DELETE')).headers['Set-Cookie'],/Max-Age=0/);
+  assert.equal((await call('POST',{}, {'content-type':'text/plain'})).statusCode,415);
+  assert.equal((await call('POST',{}, {'content-length':'9000'})).statusCode,413);
+  for(let i=0;i<8;i++)assert.equal((await call('POST',{username:'bad',password:'bad'},{'x-forwarded-for':'test-rate-limit'})).statusCode,401);
+  assert.equal((await call('POST',{username:'bad',password:'bad'},{'x-forwarded-for':'test-rate-limit'})).statusCode,429);
+  console.log('PASS: valid/invalid login, tampered/expired sessions, cookie flags, origin checks, logout, input limits, attempt throttling, and private catalog.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

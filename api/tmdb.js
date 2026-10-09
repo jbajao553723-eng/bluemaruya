@@ -1,8 +1,14 @@
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
+const { getSession } = require('../lib/session');
 
 let genreCache = null;
 let genreCacheTime = 0;
+const responseCache = new Map();
+function normalizedGenre(name, type) {
+  const value = String(name || '').toLowerCase();
+  return ({'sci-fi': type === 'tv' ? 'sci-fi & fantasy' : 'science fiction', action: type === 'tv' ? 'action & adventure' : 'action', adventure: type === 'tv' ? 'action & adventure' : 'adventure', fantasy: type === 'tv' ? 'sci-fi & fantasy' : 'fantasy', war: type === 'tv' ? 'war & politics' : 'war'})[value] || value;
+}
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -65,14 +71,20 @@ async function tmdb(path, params = {}) {
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
   }
+  const cached = responseCache.get(url.href);
+  if (cached && cached.until > Date.now()) return cached.data;
   const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(10000)
   });
   if (!response.ok) {
     const message = await response.text();
     throw new Error(`TMDB request failed (${response.status}): ${message.slice(0, 180)}`);
   }
-  return response.json();
+  const data = await response.json();
+  if (responseCache.size >= 150) responseCache.delete(responseCache.keys().next().value);
+  responseCache.set(url.href, { data, until: Date.now() + 5 * 60 * 1000 });
+  return data;
 }
 
 async function getGenres() {
@@ -96,7 +108,8 @@ module.exports = async function handler(req, res) {
     return send(res, 405, { error: 'Method not allowed' });
   }
 
-  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=3600');
+  res.setHeader('Cache-Control', 'private, no-store');
+  if (!getSession(req)) return send(res, 401, { error: 'Please sign in to browse.' });
   try {
     const mode = String(req.query.mode || 'home');
     const genres = await getGenres();
@@ -131,9 +144,11 @@ module.exports = async function handler(req, res) {
     if (mode === 'search') {
       const query = String(req.query.query || '').trim().slice(0, 100);
       if (query.length < 2) return send(res, 200, { results: [], page: 1, totalPages: 1 });
-      const payload = await tmdb('/search/multi', { query, page, include_adult: false });
+      const searchType = ['movie', 'tv'].includes(req.query.type) ? req.query.type : 'multi';
+      const payload = await tmdb(`/search/${searchType}`, { query, page, include_adult: false });
+      const genreName = String(req.query.genre || '');
       return send(res, 200, {
-        results: formatList(payload, null, genres),
+        results: formatList(payload, searchType === 'multi' ? null : searchType, genres).filter(title => !genreName || title.genres.some(name => name.toLowerCase() === normalizedGenre(genreName, title.type))),
         page: payload.page,
         totalPages: Math.min(payload.total_pages || 1, 500)
       });
@@ -141,13 +156,8 @@ module.exports = async function handler(req, res) {
 
     const type = req.query.type === 'tv' ? 'tv' : 'movie';
     const genreName = String(req.query.genre || '').trim().toLowerCase();
-    const aliases = {
-      'sci-fi': type === 'tv' ? 'sci-fi & fantasy' : 'science fiction',
-      action: type === 'tv' ? 'action & adventure' : 'action',
-      adventure: type === 'tv' ? 'action & adventure' : 'adventure'
-    };
-    const normalizedGenre = aliases[genreName] || genreName;
-    const genreEntry = Object.entries(genres[type]).find(([, name]) => name.toLowerCase() === normalizedGenre);
+    const genreEntry = Object.entries(genres[type]).find(([, name]) => name.toLowerCase() === normalizedGenre(genreName, type));
+    if (genreName && !genreEntry) return send(res, 200, { results: [], page: 1, totalPages: 1 });
     const payload = await tmdb(`/discover/${type}`, {
       page,
       include_adult: false,
