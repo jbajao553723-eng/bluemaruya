@@ -17,6 +17,7 @@ Run `node scripts/serve.mjs` and open http://127.0.0.1:4173, or serve `dist/` wi
 - Server-verified member login with a scrypt password hash and an eight-hour HttpOnly session cookie
 - CineSrc movie and TV embeds built from each title's TMDB ID
 - Season and episode selection, plus playback cleanup when the player closes
+- Sandboxed playback that blocks pop-up tabs, top-level redirects, downloads, and referrer leakage from third-party embeds
 
 The live catalog is loaded through `api/tmdb.js`, a Vercel Function that keeps the TMDB credential on the server. `dist/app.js` contains a small fallback selection so the interface remains usable during a temporary API outage. Never commit the TMDB token or embed it in browser JavaScript.
 
