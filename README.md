@@ -13,6 +13,7 @@ Run `node scripts/serve.mjs` and open http://127.0.0.1:4173, or serve `dist/` wi
 - A watchlist saved on this device using localStorage
 - Bootstrap 5.3.8 grid, forms, and account dropdown
 - Rotating featured backdrops, slow-pan artwork, poster hover transitions, and scroll reveals
+- A four-photo, crossfading login backdrop with reduced-motion support
 - Phone bottom navigation and reduced-motion support
 - Server-verified member login with a scrypt password hash and an eight-hour HttpOnly session cookie
 - CineSrc movie and TV embeds built from each title's TMDB ID
@@ -30,6 +31,8 @@ For local preview, `scripts/serve.mjs` handles the same authentication endpoints
 ## Artwork
 
 Posters and TV season artwork are sourced from the corresponding English Wikipedia title/season pages and remain the property of their respective rights holders. The Zootopia 2 hero is promotional imagery from [Disney D23](https://d23.com/the-98th-oscars-where-to-watch-disneys-nominees/). Exact asset URLs are recorded in `scripts/download-artwork.mjs`. Run `node scripts/download-artwork.mjs` to restore them.
+
+The four login reaction backdrops are user-provided assets bundled in `dist/assets/`.
 
 The original generated concept hero is retained in `dist/assets/noir-hero.png` but is no longer used by the page.
 
