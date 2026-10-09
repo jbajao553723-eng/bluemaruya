@@ -14,3 +14,5 @@ dialog{color:var(--text);border:1px solid #ffffff20;border-radius:16px;backgroun
 @media(max-width:380px){.hero-actions .button{padding:12px 13px}.hero-content.long-title h1{font-size:43px}.hero-content.very-long-title h1{font-size:36px}.browse-toolbar h2{font-size:21px}.genre-control select{max-width:106px}.hero-slider{gap:8px}.hero-dot{width:10px}.hero-dot.active{width:20px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal-ready{opacity:1;transform:none}.hero-image{transform:none}}
 @media(max-width:767px){.app-nav,.app-nav.scrolled{backdrop-filter:none;background:#0d1624f7}.login-container>.row{--bs-gutter-x:0}}
+.hero-art{overflow:hidden}.hero:before{display:none}.hero-art:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#090e18f7 1%,#090e18d4 28%,#090e1850 62%,#090e1820),linear-gradient(0deg,var(--bg) 0%,#090e1820 55%,#090e1820)}
+@media(max-width:767px){.hero-art:after{background:linear-gradient(0deg,#090e18 0%,#090e18d9 36%,#090e1850 75%,#090e1840),linear-gradient(90deg,#090e1885,#090e1810)}}
