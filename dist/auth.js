@@ -20,6 +20,7 @@
     document.documentElement.dataset.bsTheme = pink ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]').content = pink ? '#fff6fa' : '#090909';
     document.querySelector('#dashboardMemberName').textContent = member.displayName;
+    document.querySelector('#wakenDisplayName').textContent = member.displayName;
     document.querySelector('#memberName').textContent = member.displayName;
     document.querySelector('#memberUsername').textContent = '@' + member.username;
     document.querySelector('#memberWelcome').textContent = 'Welcome, ' + member.displayName;
@@ -46,6 +47,7 @@
     document.documentElement.dataset.bsTheme = 'dark';
     document.querySelector('meta[name="theme-color"]').content = '#090909';
     document.querySelector('#memberDashboardIntro').hidden = true;
+    document.querySelector('#wakenDashboardIntro').hidden = true;
     changePasswordForm.reset(); profileForm.reset();
     screen.hidden = false;
     shell.hidden = true;

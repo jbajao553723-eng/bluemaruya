@@ -6,6 +6,11 @@ const preferencePicks = require('../dist/preferences');
 let genreCache = null;
 let genreCacheTime = 0;
 const responseCache = new Map();
+function titleLogo(images) {
+  const logos = (images?.logos || []).filter(image => /^\/[\w.-]+\.(png|svg|webp)$/i.test(image.file_path || '') && ['en', null].includes(image.iso_639_1));
+  logos.sort((a, b) => Number(b.iso_639_1 === 'en') - Number(a.iso_639_1 === 'en') || Number(b.aspect_ratio >= 1.2) - Number(a.aspect_ratio >= 1.2) || (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0));
+  return logos[0] ? `${IMAGE_BASE}/original${logos[0].file_path}` : '';
+}
 function normalizedGenre(name, type) {
   const value = String(name || '').toLowerCase();
   return ({'sci-fi': type === 'tv' ? 'sci-fi & fantasy' : 'science fiction', action: type === 'tv' ? 'action & adventure' : 'action', adventure: type === 'tv' ? 'action & adventure' : 'adventure', fantasy: type === 'tv' ? 'sci-fi & fantasy' : 'fantasy', war: type === 'tv' ? 'war & politics' : 'war'})[value] || value;
@@ -60,6 +65,7 @@ function formatTitle(item, typeHint, genresByType) {
     image: item.poster_path ? `${IMAGE_BASE}/w500${item.poster_path}` : '',
     backdrop: item.backdrop_path ? `${IMAGE_BASE}/w1280${item.backdrop_path}` : '',
     description: item.overview || 'No description is available for this title yet.',
+    ...(item.images ? { logo: titleLogo(item.images) } : {}),
     ...(seasons ? { seasons } : {})
   };
 }
@@ -115,6 +121,13 @@ module.exports = async function handler(req, res) {
   catch { return send(res, 503, { error: 'Account services are temporarily unavailable. Please try again.' }); }
   try {
     const mode = String(req.query.mode || 'home');
+    if (mode === 'artwork') {
+      const type = req.query.type === 'tv' ? 'tv' : 'movie';
+      const id = Number(req.query.id);
+      if (!Number.isSafeInteger(id) || id < 1) return send(res, 400, { error: 'A valid title ID is required' });
+      const images = await tmdb(`/${type}/${id}/images`, { include_image_language: 'en,null' });
+      return send(res, 200, { logo: titleLogo(images) });
+    }
     const genres = await getGenres();
 
     if (mode === 'home') {
