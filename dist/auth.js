@@ -7,6 +7,27 @@
   const password = document.querySelector('#password');
   let signedIn = false;
   let checking = false;
+  let member = null;
+  let toastTimer;
+  const settings = document.querySelector('#settingsDialog');
+  const profileForm = document.querySelector('#profileForm');
+  const changePasswordForm = document.querySelector('#changePasswordForm');
+
+  function updateMember(data) {
+    member = { username: data.username, displayName: data.displayName || data.username };
+    document.querySelector('#memberName').textContent = member.displayName;
+    document.querySelector('#memberUsername').textContent = '@' + member.username;
+    document.querySelector('#memberWelcome').textContent = 'Welcome, ' + member.displayName;
+    document.querySelector('#memberAvatar').textContent = member.displayName.slice(0, 1).toUpperCase();
+    document.querySelector('#settingsAvatar').textContent = member.displayName.slice(0, 1).toUpperCase();
+    document.querySelector('#settingsMemberName').textContent = member.displayName;
+    document.querySelector('#settingsUsername').textContent = '@' + member.username;
+  }
+  function toast(text) {
+    const element = document.querySelector('#toast');
+    element.textContent = text; element.classList.add('visible');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => element.classList.remove('visible'), 3500);
+  }
 
   function setMessage(text, error = false) {
     message.textContent = text;
@@ -15,6 +36,8 @@
   function showLogin(text = '') {
     const wasSignedIn = signedIn;
     signedIn = false;
+    member = null;
+    changePasswordForm.reset(); profileForm.reset();
     screen.hidden = false;
     shell.hidden = true;
     document.body.classList.remove('dialog-open');
@@ -26,15 +49,16 @@
     setMessage(text, Boolean(text));
     if (wasSignedIn) window.dispatchEvent(new Event('member:signed-out'));
   }
-  function showMember(username) {
+  function showMember(data) {
     signedIn = true;
-    document.querySelector('#memberName').textContent = username;
+    updateMember(data);
     screen.hidden = true;
     shell.hidden = false;
     password.value = '';
     setMessage('');
     window.scrollTo({ top: 0 });
     window.dispatchEvent(new Event('member:signed-in'));
+    toast('Welcome, ' + member.displayName);
   }
   async function checkSession() {
     if (checking) return;
@@ -44,7 +68,9 @@
       if (!response.ok) throw new Error();
       const data = await response.json();
       if (data.authenticated) {
-        if (!signedIn) showMember(data.username);
+        if (!signedIn) showMember(data);
+        else if (member.username !== data.username) { showLogin(); showMember(data); }
+        else updateMember(data);
       } else showLogin();
     } catch {
       if (!signedIn) showLogin('Unable to connect. Please try signing in again.');
@@ -63,7 +89,7 @@
       });
       const data = await response.json();
       if (!response.ok || !data.authenticated) throw new Error(data.error || 'Please try again.');
-      showMember(data.username);
+      showMember(data);
     } catch (error) {
       setMessage(error.message || 'Unable to sign in. Please try again.', true);
       password.value = '';
@@ -80,7 +106,8 @@
     event.currentTarget.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
   });
   document.querySelector('#logoutButton').addEventListener('click', async event => {
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    button.disabled = true;
     try {
       const response = await fetch('/api/auth', { method: 'DELETE', credentials: 'same-origin' });
       if (!response.ok) throw new Error();
@@ -89,9 +116,45 @@
     } catch {
       document.querySelector('#toast').textContent = 'Could not sign out. Please try again.';
       document.querySelector('#toast').classList.add('visible');
-    } finally { event.currentTarget.disabled = false; }
+    } finally { button.disabled = false; }
   });
-  window.memberAuth = { isAuthenticated: () => signedIn, expire: () => showLogin('Your session ended. Please sign in again.') };
+  function settingsMessage(selector, text, error = false) {
+    const element = document.querySelector(selector);
+    element.textContent = text; element.classList.toggle('is-error', error);
+  }
+  function closeSettings() { settings.close(); changePasswordForm.reset(); document.body.classList.remove('dialog-open'); }
+  document.querySelector('#settingsButton').addEventListener('click', async () => {
+    window.bootstrap?.Dropdown.getInstance(document.querySelector('.profile-button'))?.hide();
+    await checkSession();
+    if (!signedIn) return;
+    profileForm.displayName.value = member.displayName;
+    changePasswordForm.reset(); settingsMessage('#profileMessage', ''); settingsMessage('#passwordMessage', '');
+    settings.showModal(); document.body.classList.add('dialog-open');
+  });
+  document.querySelector('#closeSettings').addEventListener('click', closeSettings);
+  settings.addEventListener('cancel', event => { event.preventDefault(); closeSettings(); });
+  settings.addEventListener('click', event => { const rect = settings.getBoundingClientRect(); if (event.target === settings && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeSettings(); });
+  async function saveSettings(formElement, selector, body) {
+    const button = formElement.querySelector('button[type="submit"]');
+    button.disabled = true; settingsMessage(selector, 'Saving…');
+    try {
+      const response = await fetch('/api/auth', { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await response.json();
+      if (response.status === 401) { showLogin(data.error); return; }
+      if (!response.ok) throw new Error(data.error || 'Unable to save. Please try again.');
+      updateMember(data); settingsMessage(selector, data.message);
+      if (body.action === 'password') changePasswordForm.reset();
+      else profileForm.displayName.value = member.displayName;
+    } catch (error) { settingsMessage(selector, error.message || 'Unable to save. Please try again.', true); }
+    finally { button.disabled = false; }
+  }
+  profileForm.addEventListener('submit', event => { event.preventDefault(); saveSettings(profileForm, '#profileMessage', { action: 'profile', displayName: profileForm.displayName.value }); });
+  changePasswordForm.addEventListener('submit', event => {
+    event.preventDefault();
+    if (changePasswordForm.newPassword.value !== changePasswordForm.confirmPassword.value) { settingsMessage('#passwordMessage', 'Your new passwords do not match.', true); return; }
+    saveSettings(changePasswordForm, '#passwordMessage', { action: 'password', currentPassword: changePasswordForm.currentPassword.value, newPassword: changePasswordForm.newPassword.value });
+  });
+  window.memberAuth = { isAuthenticated: () => signedIn, currentMember: () => member, expire: () => showLogin('Your session ended. Please sign in again.') };
   // Recheck restored tabs and long-running sessions.
   window.addEventListener('pageshow', event => { if (event.persisted) checkSession(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && signedIn) checkSession(); });

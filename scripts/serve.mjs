@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {randomBytes} from 'node:crypto';
 const require=createRequire(import.meta.url);
 process.env.AUTH_SESSION_SECRET ||= randomBytes(32).toString('hex');
+process.env.ACCOUNT_STORE_DIR ||= resolve('.local-members');
 const auth=require('../api/auth.js');
 const tmdb=require('../api/tmdb.js');
 const root=resolve('dist');
@@ -15,7 +16,7 @@ createServer(async(req,res)=>{
     const name=decodeURIComponent(url.pathname);
     if(name==='/api/auth'||name==='/api/tmdb'){
       req.query=Object.fromEntries(url.searchParams);
-      if(req.method==='POST'){
+      if(['POST','PATCH'].includes(req.method)){
         let body='';for await(const chunk of req){body+=chunk;if(body.length>2048){res.writeHead(413);res.end();return;}}
         req.body=body;
       }

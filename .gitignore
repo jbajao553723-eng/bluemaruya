@@ -5,3 +5,7 @@ site-package*
 .env
 .env.*
 !.env.example
+node_modules/
+.local-members/
+.vercel
+.env*

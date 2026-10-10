@@ -1,6 +1,6 @@
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
-const { getSession } = require('../lib/session');
+const { memberSession } = require('../lib/members');
 
 let genreCache = null;
 let genreCacheTime = 0;
@@ -109,7 +109,8 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader('Cache-Control', 'private, no-store');
-  if (!getSession(req)) return send(res, 401, { error: 'Please sign in to browse.' });
+  try { if (!await memberSession(req)) return send(res, 401, { error: 'Please sign in to browse.' }); }
+  catch { return send(res, 503, { error: 'Account services are temporarily unavailable. Please try again.' }); }
   try {
     const mode = String(req.query.mode || 'home');
     const genres = await getGenres();

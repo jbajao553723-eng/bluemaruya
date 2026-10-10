@@ -1,0 +1,12 @@
+{
+  "name": "blue-maruya",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node scripts/test-auth.cjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.1"
+  }
+}

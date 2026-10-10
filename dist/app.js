@@ -22,10 +22,13 @@ let searchTimer;
 function assetUrl(value){if(!value)return 'assets/noir-hero.png';return /^https?:\/\//.test(value)?value:`assets/${value}`;}
 function escapeHtml(value){return String(value??'').replace(/[&<>"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[character]));}
 function remember(items){for(const movie of items||[]){if(movie?.id&&movie?.type){const saved=state.saved.get(keyFor(movie));if(saved)state.saved.set(keyFor(movie),{...saved,...movie});}}}
-function persistSaved(){try{localStorage.setItem('blue-maruya-list',JSON.stringify([...state.saved.values()]));}catch{}}
+const savedKey=()=>`blue-maruya-list:${window.memberAuth.currentMember()?.username||'guest'}`;
+function persistSaved(){try{localStorage.setItem(savedKey(),JSON.stringify([...state.saved.values()]));}catch{}}
 function loadSaved(){
+  state.saved.clear();
   try{
-    const saved=JSON.parse(localStorage.getItem('blue-maruya-list')||'[]');
+    const legacy=window.memberAuth.currentMember()?.username==='wakengwapo'?localStorage.getItem('blue-maruya-list'):null;
+    const saved=JSON.parse(localStorage.getItem(savedKey())||legacy||'[]');
     if(Array.isArray(saved))for(const entry of saved){
       const movie=typeof entry==='number'?fallbackCatalog.find(item=>item.id===entry):entry;
       if(movie?.id&&movie?.type)state.saved.set(keyFor(movie),movie);
@@ -61,7 +64,7 @@ function createShelf(title,subtitle,movies,ranked=false){
   const section=document.createElement('section');section.className=`shelf${ranked?' ranked':''}`;
   section.innerHTML=`<div class="shelf-heading"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div><div class="rail-controls"><button class="icon-button" aria-label="Previous titles in ${escapeHtml(title)}">${icons.left}</button><button class="icon-button" aria-label="Next titles in ${escapeHtml(title)}">${icons.right}</button></div></div><div class="rail"></div>`;
   const rail=section.querySelector('.rail');
-  movies.forEach((movie,index)=>{const card=createCard(movie);if(ranked){const wrap=document.createElement('div');wrap.className='rank-card';const rank=document.createElement('span');rank.className='rank-number';rank.setAttribute('aria-hidden','true');rank.textContent=String(index+1).padStart(2,'0');wrap.append(rank,card);rail.append(wrap);}else rail.append(card);});
+  movies.forEach((movie,index)=>{const card=createCard(movie);if(ranked){const wrap=document.createElement('div');wrap.className='rank-card';const rank=document.createElement('span');rank.className='rank-number';rank.setAttribute('aria-hidden','true');rank.textContent=String(index+1);wrap.append(rank,card);rail.append(wrap);}else rail.append(card);});
   const[left,right]=section.querySelectorAll('.rail-controls button');
   left.onclick=()=>rail.scrollBy({left:-rail.clientWidth*.8,behavior:'smooth'});right.onclick=()=>rail.scrollBy({left:rail.clientWidth*.8,behavior:'smooth'});
   function controls(){left.disabled=rail.scrollLeft<2;right.disabled=rail.scrollLeft+rail.clientWidth>=rail.scrollWidth-3;}
@@ -88,8 +91,8 @@ function render(){
   const items=state.view==='saved'?filterSaved():state.items;
   if(homeMode){
     const home=state.home;
-    createShelf('Trending now','The titles everyone is talking about.',home?.trending||fallbackCatalog.slice(0,8),true);
-    createShelf('Popular movies','Big-screen favorites for tonight.',home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie'));
+    createShelf('Top 10 movies','The big-screen favorites everyone is watching.',(home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie')).slice(0,10),true);
+    createShelf('Trending now','The movies and series everyone is talking about.',home?.trending||fallbackCatalog.slice(0,8));
     createShelf('Popular series','Your next series obsession.',home?.tv||fallbackCatalog.filter(movie=>movie.type==='tv'));
     $('#browseTitle').textContent='Find something you’ll love.';
   }else{
@@ -162,5 +165,5 @@ document.querySelectorAll('.wordmark').forEach(link=>link.onclick=()=>setView('h
 
 window.addEventListener('cinema:feature',event=>updateHero(event.detail));
 window.addEventListener('member:signed-in',()=>{loadSaved();setView('home');});
-window.addEventListener('member:signed-out',()=>{++state.request;clearTimeout(searchTimer);window.cinema.stop();state.selected=null;state.playing=null;state.loading=false;state.home=null;state.items=[];});
+window.addEventListener('member:signed-out',()=>{++state.request;clearTimeout(searchTimer);window.cinema.stop();state.selected=null;state.playing=null;state.loading=false;state.home=null;state.items=[];state.saved.clear();state.query='';$('#searchInput').value='';});
 if(window.memberAuth.isAuthenticated()){loadSaved();setView('home');}
