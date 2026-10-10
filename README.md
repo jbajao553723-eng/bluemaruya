@@ -14,6 +14,7 @@ Run `npm ci`, then `node scripts/serve.mjs` and open http://127.0.0.1:4173. The 
 - Bootstrap 5.3.8 grid, forms, and account dropdown
 - Rotating featured backdrops, slow-pan artwork, poster hover transitions, and scroll reveals
 - A four-photo, crossfading login backdrop with reduced-motion support
+- A redesigned photo stage and member entrance, with manual photo selection, next/pause controls, and a responsive cinema-club layout
 - Phone bottom navigation and reduced-motion support
 - Server-verified member login with a scrypt password hash and an eight-hour HttpOnly session cookie
 - Personal welcomes and account settings for persistent display names and password changes
