@@ -18,6 +18,8 @@ Run `npm ci`, then `node scripts/serve.mjs` and open http://127.0.0.1:4173. The 
 - Phone bottom navigation and reduced-motion support
 - Server-verified member login with a scrypt password hash and an eight-hour HttpOnly session cookie
 - Personal welcomes and account settings for persistent display names and password changes
+- Kristine-only blush pink dashboard with a personal greeting, rounded spotlight, and coordinated browsing/settings surfaces; Waken keeps the charcoal/red theme
+- A Preferences shelf immediately after Trending now for Kristine: Shrek, Tangled (Rapunzel), Beauty and the Beast (1991), Mulan (1998), and The Avengers; live metadata with bundled fallback posters
 - CineSrc movie and TV embeds built from each title's TMDB ID
 - Season and episode selection, plus playback cleanup when the player closes
 - Sandboxed playback that blocks pop-up tabs, top-level redirects, downloads, and referrer leakage from third-party embeds
@@ -37,6 +39,8 @@ For local preview, `scripts/serve.mjs` handles the same authentication endpoints
 Posters and TV season artwork are sourced from the corresponding English Wikipedia title/season pages and remain the property of their respective rights holders. The Zootopia 2 hero is promotional imagery from [Disney D23](https://d23.com/the-98th-oscars-where-to-watch-disneys-nominees/). Exact asset URLs are recorded in `scripts/download-artwork.mjs`. Run `node scripts/download-artwork.mjs` to restore them.
 
 The four login reaction backdrops are user-provided assets bundled in `dist/assets/`.
+
+Kristine's bundled preference posters and Tangled backdrop use artwork from the corresponding TMDB movie records. The download script records their exact URLs. Run `npm run test:preferences` for account-specific shelf and fallback checks.
 
 The original generated concept hero is retained in `dist/assets/noir-hero.png` but is no longer used by the page.
 

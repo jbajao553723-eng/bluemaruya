@@ -15,6 +15,11 @@
 
   function updateMember(data) {
     member = { username: data.username, displayName: data.displayName || data.username };
+    const pink = member.username === 'kdumangas';
+    document.body.dataset.memberTheme = pink ? 'kristine' : 'waken';
+    document.documentElement.dataset.bsTheme = pink ? 'light' : 'dark';
+    document.querySelector('meta[name="theme-color"]').content = pink ? '#fff6fa' : '#090909';
+    document.querySelector('#dashboardMemberName').textContent = member.displayName;
     document.querySelector('#memberName').textContent = member.displayName;
     document.querySelector('#memberUsername').textContent = '@' + member.username;
     document.querySelector('#memberWelcome').textContent = 'Welcome, ' + member.displayName;
@@ -37,6 +42,10 @@
     const wasSignedIn = signedIn;
     signedIn = false;
     member = null;
+    delete document.body.dataset.memberTheme;
+    document.documentElement.dataset.bsTheme = 'dark';
+    document.querySelector('meta[name="theme-color"]').content = '#090909';
+    document.querySelector('#memberDashboardIntro').hidden = true;
     changePasswordForm.reset(); profileForm.reset();
     screen.hidden = false;
     shell.hidden = true;

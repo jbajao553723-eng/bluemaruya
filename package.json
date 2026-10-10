@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "test": "node scripts/test-auth.cjs"
+    "test": "node scripts/test-auth.cjs && node scripts/test-preferences.cjs",
+    "test:preferences": "node scripts/test-preferences.cjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1"

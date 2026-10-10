@@ -1,6 +1,7 @@
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 const { memberSession } = require('../lib/members');
+const preferencePicks = require('../dist/preferences');
 
 let genreCache = null;
 let genreCacheTime = 0;
@@ -109,17 +110,27 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader('Cache-Control', 'private, no-store');
-  try { if (!await memberSession(req)) return send(res, 401, { error: 'Please sign in to browse.' }); }
+  let session;
+  try { session = await memberSession(req); if (!session) return send(res, 401, { error: 'Please sign in to browse.' }); }
   catch { return send(res, 503, { error: 'Account services are temporarily unavailable. Please try again.' }); }
   try {
     const mode = String(req.query.mode || 'home');
     const genres = await getGenres();
 
     if (mode === 'home') {
-      const [trending, movies, tv] = await Promise.all([
+      const [trending, movies, tv, preferences] = await Promise.all([
         tmdb('/trending/all/week'),
         tmdb('/movie/popular', { page: 1 }),
-        tmdb('/tv/popular', { page: 1 })
+        tmdb('/tv/popular', { page: 1 }),
+        session.member.username === 'kdumangas'
+          ? Promise.all(preferencePicks.map(async pick => {
+            try {
+              const item = await tmdb(`/movie/${pick.id}`, { append_to_response: 'release_dates' });
+              const title = formatTitle(item, 'movie', genres);
+              return { ...pick, ...title, image: title.image || pick.image, backdrop: title.backdrop || pick.backdrop };
+            } catch { return pick; }
+          }))
+          : undefined
       ]);
       const trendingTitles = formatList(trending, null, genres);
       const popularMovies = formatList(movies, 'movie', genres);
@@ -128,7 +139,8 @@ module.exports = async function handler(req, res) {
         hero: trendingTitles.find(title => title.backdrop) || popularMovies[0],
         trending: trendingTitles,
         movies: popularMovies,
-        tv: popularTv
+        tv: popularTv,
+        ...(preferences ? { preferences } : {})
       });
     }
 

@@ -11,7 +11,13 @@ const images={
   'breaking-bad.jpg':'https://upload.wikimedia.org/wikipedia/en/6/61/BreakingBadS1DVD.jpg',
   'stranger-things.jpg':'https://upload.wikimedia.org/wikipedia/en/b/b1/Stranger_Things_season_1.jpg',
   'last-of-us.png':'https://upload.wikimedia.org/wikipedia/en/3/3e/The_Last_of_Us_season_1_Blu-ray.png',
-  'zootopia-hero.jpg':'https://d23.com/app/uploads/2026/03/IMAGE-3_Zootopia-2.jpg'
+  'zootopia-hero.jpg':'https://d23.com/app/uploads/2026/03/IMAGE-3_Zootopia-2.jpg',
+  'preference-shrek.jpg':'https://image.tmdb.org/t/p/w500/iB64vpL3dIObOtMZgX3RqdVdQDc.jpg',
+  'preference-tangled.jpg':'https://image.tmdb.org/t/p/w500/ym7Kst6a4uodryxqbGOxmewF235.jpg',
+  'preference-beauty-and-the-beast.jpg':'https://image.tmdb.org/t/p/w500/hUJ0UvQ5tgE2Z9WpfuduVSdiCiU.jpg',
+  'preference-mulan.jpg':'https://image.tmdb.org/t/p/w500/jAbexAtB0aSfP5Ay4TpWHARyVnG.jpg',
+  'preference-avengers.jpg':'https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg',
+  'preference-tangled-backdrop.jpg':'https://image.tmdb.org/t/p/w1280/cWczNud8Y8i8ab0Z4bxos4myWYO.jpg'
 };
 await mkdir('dist/assets',{recursive:true});
 for(const[file,url]of Object.entries(images)){
