@@ -121,7 +121,7 @@ async function loadTitleLogo(movie,request){
   try{
     if(!logoCache.has(key))logoCache.set(key,requestCatalog({mode:'artwork',type:movie.type,id:movie.id}).then(data=>data.logo||'').catch(()=>{logoCache.delete(key);return '';}));
     const src=await logoCache.get(key);
-    if(!src||!/^https:\/\/image\.tmdb\.org\/t\/p\/original\/[\w.-]+\.(png|svg|webp)$/i.test(src))return;
+    if(!src||!/^https:\/\/image\.tmdb\.org\/t\/p\/(w500|original)\/[\w.-]+\.(png|svg|webp)$/i.test(src))return;
     const image=new Image();image.onload=()=>{if(request!==state.logoRequest||owner!==window.memberAuth.currentMember()?.username||!window.memberAuth.isAuthenticated())return;$('#heroLogo').src=src;$('#heroLogo').hidden=false;$('#heroTitle').classList.add('has-title-logo');};image.src=src;
   }catch{}
 }

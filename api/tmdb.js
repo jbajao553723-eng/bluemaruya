@@ -9,7 +9,7 @@ const responseCache = new Map();
 function titleLogo(images) {
   const logos = (images?.logos || []).filter(image => /^\/[\w.-]+\.(png|svg|webp)$/i.test(image.file_path || '') && ['en', null].includes(image.iso_639_1));
   logos.sort((a, b) => Number(b.iso_639_1 === 'en') - Number(a.iso_639_1 === 'en') || Number(b.aspect_ratio >= 1.2) - Number(a.aspect_ratio >= 1.2) || (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0));
-  return logos[0] ? `${IMAGE_BASE}/original${logos[0].file_path}` : '';
+  return logos[0] ? `${IMAGE_BASE}/w500${logos[0].file_path}` : '';
 }
 function normalizedGenre(name, type) {
   const value = String(name || '').toLowerCase();

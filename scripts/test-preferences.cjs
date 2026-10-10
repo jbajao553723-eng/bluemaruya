@@ -34,7 +34,7 @@ async function home(username,query={mode:'home'}) {
 (async () => {
   assert.equal((await home()).statusCode,401);
   assert.equal((await home(null,{mode:'artwork',id:808,type:'movie'})).statusCode,401);
-  assert.equal((await home('wakengwapo',{mode:'artwork',id:808,type:'movie'})).body.logo,'https://image.tmdb.org/t/p/original/english.png');
+  assert.equal((await home('wakengwapo',{mode:'artwork',id:808,type:'movie'})).body.logo,'https://image.tmdb.org/t/p/w500/english.png');
   assert.equal((await home('kdumangas',{mode:'artwork',id:10674,type:'movie'})).body.logo,'');
   assert.equal((await home('wakengwapo',{mode:'artwork',id:'-1',type:'movie'})).statusCode,400);
   assert.equal((await home('wakengwapo',{mode:'artwork',id:'1.5',type:'tv'})).statusCode,400);
