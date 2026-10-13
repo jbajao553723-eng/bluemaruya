@@ -8,10 +8,34 @@
   let signedIn = false;
   let checking = false;
   let member = null;
+  let authGeneration = 0;
   let toastTimer;
   const settings = document.querySelector('#settingsDialog');
   const profileForm = document.querySelector('#profileForm');
   const changePasswordForm = document.querySelector('#changePasswordForm');
+  const rememberUsername = document.querySelector('#rememberUsername');
+  const profileChoices = [...document.querySelectorAll('[data-login-member]')];
+  function selectProfile(username) {
+    profileChoices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.loginMember === username)));
+    document.body.dataset.loginMember = username === 'kdumangas' ? 'kristine' : 'waken';
+  }
+  try { const saved = localStorage.getItem('blue-maruya-login-username'); if (['wakengwapo','kdumangas'].includes(saved)) { form.username.value = saved; rememberUsername.checked = true; selectProfile(saved); } } catch {}
+  profileChoices.forEach(button => button.addEventListener('click', () => { form.username.value = button.dataset.loginMember; selectProfile(form.username.value); password.focus(); }));
+  form.username.addEventListener('input', () => selectProfile(form.username.value.trim()));
+  password.addEventListener('keyup', event => { document.querySelector('#capsLockHint').hidden = !event.getModifierState?.('CapsLock'); });
+  password.addEventListener('blur', () => { document.querySelector('#capsLockHint').hidden = true; });
+  async function authFetch(options = {}) {
+    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), options.method ? 20000 : 12000);
+    try { return await fetch('/api/auth', { credentials: 'same-origin', cache: 'no-store', ...options, signal: controller.signal }); }
+    catch (error) { if (error.name === 'AbortError') throw new Error('The connection is taking too long. Please try again.'); throw new Error('Unable to connect. Check your connection and try again.'); }
+    finally { clearTimeout(timer); }
+  }
+  function applyPreferences() {
+    if (!member) return;
+    const prefs = window.memberPreferencesStore.read(member.username);
+    document.body.dataset.motion = prefs.motion ? 'on' : 'off';
+    window.cinema.setMotion(prefs.motion);
+  }
 
   function updateMember(data) {
     member = { username: data.username, displayName: data.displayName || data.username };
@@ -28,6 +52,7 @@
     document.querySelector('#settingsAvatar').textContent = member.displayName.slice(0, 1).toUpperCase();
     document.querySelector('#settingsMemberName').textContent = member.displayName;
     document.querySelector('#settingsUsername').textContent = '@' + member.username;
+    applyPreferences();
   }
   function toast(text) {
     const element = document.querySelector('#toast');
@@ -42,8 +67,11 @@
   function showLogin(text = '') {
     const wasSignedIn = signedIn;
     signedIn = false;
+    ++authGeneration;
     member = null;
     delete document.body.dataset.memberTheme;
+    delete document.body.dataset.motion;
+    window.cinema.setMotion(true);
     document.documentElement.dataset.bsTheme = 'dark';
     document.querySelector('meta[name="theme-color"]').content = '#090909';
     document.querySelector('#memberDashboardIntro').hidden = true;
@@ -56,8 +84,10 @@
     document.querySelector('#player').removeAttribute('src');
     document.querySelector('#toast').classList.remove('visible');
     password.value = '';
+    password.type = 'password'; document.querySelector('#passwordToggle').setAttribute('aria-pressed','false'); document.querySelector('#passwordToggle').setAttribute('aria-label','Show password');
     submit.disabled = false;
     setMessage(text, Boolean(text));
+    if (wasSignedIn) window.scrollTo({top:0,behavior:'instant'});
     if (wasSignedIn) window.dispatchEvent(new Event('member:signed-out'));
   }
   function showMember(data) {
@@ -74,32 +104,37 @@
   async function checkSession() {
     if (checking) return;
     checking = true;
+    const generation = authGeneration;
     try {
-      const response = await fetch('/api/auth', { cache: 'no-store', credentials: 'same-origin' });
+      const response = await authFetch();
       if (!response.ok) throw new Error();
       const data = await response.json();
+      if (generation !== authGeneration) return;
       if (data.authenticated) {
         if (!signedIn) showMember(data);
         else if (member.username !== data.username) { showLogin(); showMember(data); }
         else updateMember(data);
       } else showLogin();
-    } catch {
-      if (!signedIn) showLogin('Unable to connect. Please try signing in again.');
+    } catch (error) {
+      if (generation === authGeneration && !signedIn) showLogin(error.message || 'Unable to connect. Please try signing in again.');
     } finally { checking = false; }
   }
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    ++authGeneration;
     submit.disabled = true;
+    form.setAttribute('aria-busy','true');
     submit.querySelector('span').textContent = 'Signing in…';
     setMessage('');
     try {
-      const response = await fetch('/api/auth', {
+      const response = await authFetch({
         method: 'POST', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: form.username.value, password: password.value })
       });
       const data = await response.json();
       if (!response.ok || !data.authenticated) throw new Error(data.error || 'Please try again.');
+      try { if (rememberUsername.checked) localStorage.setItem('blue-maruya-login-username', data.username); else localStorage.removeItem('blue-maruya-login-username'); } catch {}
       showMember(data);
     } catch (error) {
       setMessage(error.message || 'Unable to sign in. Please try again.', true);
@@ -107,6 +142,7 @@
       password.focus();
     } finally {
       submit.disabled = false;
+      form.setAttribute('aria-busy','false');
       submit.querySelector('span').textContent = 'Sign in';
     }
   });
@@ -120,7 +156,7 @@
     const button = event.currentTarget;
     button.disabled = true;
     try {
-      const response = await fetch('/api/auth', { method: 'DELETE', credentials: 'same-origin' });
+      const response = await authFetch({ method: 'DELETE' });
       if (!response.ok) throw new Error();
       window.bootstrap?.Dropdown.getInstance(document.querySelector('.profile-button'))?.hide();
       showLogin();
@@ -139,6 +175,10 @@
     await checkSession();
     if (!signedIn) return;
     profileForm.displayName.value = member.displayName;
+    const preferences = window.memberPreferencesStore.read(member.username);
+    document.querySelector('#preferredQuality').value = preferences.quality;
+    document.querySelector('#enableMotion').checked = preferences.motion;
+    settingsMessage('#experienceMessage','');
     changePasswordForm.reset(); settingsMessage('#profileMessage', ''); settingsMessage('#passwordMessage', '');
     settings.showModal(); document.body.classList.add('dialog-open');
   });
@@ -149,7 +189,7 @@
     const button = formElement.querySelector('button[type="submit"]');
     button.disabled = true; settingsMessage(selector, 'Saving…');
     try {
-      const response = await fetch('/api/auth', { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const response = await authFetch({ method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await response.json();
       if (response.status === 401) { showLogin(data.error); return; }
       if (!response.ok) throw new Error(data.error || 'Unable to save. Please try again.');
@@ -160,6 +200,7 @@
     finally { button.disabled = false; }
   }
   profileForm.addEventListener('submit', event => { event.preventDefault(); saveSettings(profileForm, '#profileMessage', { action: 'profile', displayName: profileForm.displayName.value }); });
+  document.querySelector('#experienceForm').addEventListener('submit', event => { event.preventDefault(); if(!member)return; const saved = window.memberPreferencesStore.save(member.username,{quality:document.querySelector('#preferredQuality').value,motion:document.querySelector('#enableMotion').checked}); if(saved)applyPreferences(); settingsMessage('#experienceMessage',saved?'Your preferences have been saved.':'Preferences could not be saved on this device.',!saved); });
   changePasswordForm.addEventListener('submit', event => {
     event.preventDefault();
     if (changePasswordForm.newPassword.value !== changePasswordForm.confirmPassword.value) { settingsMessage('#passwordMessage', 'Your new passwords do not match.', true); return; }

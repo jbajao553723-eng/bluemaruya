@@ -1,14 +1,14 @@
 (() => {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let slides = [], index = 0, timer = null, paused = reduceMotion.matches, hovered = false, focused = false, generation = 0;
+  let slides = [], index = 0, timer = null, paused = reduceMotion.matches, hovered = false, focused = false, generation = 0, motionEnabled = true;
   const hero = document.querySelector('#home');
   const dots = document.querySelector('#heroDots');
   const pause = document.querySelector('#heroPause');
 
-  function shouldRotate() { return !paused && !hovered && !focused && !document.hidden && !hero.hidden && window.memberAuth?.isAuthenticated(); }
+  function shouldRotate() { return motionEnabled && !paused && !hovered && !focused && !document.hidden && !hero.hidden && !document.body.classList.contains('dialog-open') && window.memberAuth?.isAuthenticated(); }
   function schedule() {
     clearTimeout(timer);
-    if (slides.length > 1 && shouldRotate()) timer = setTimeout(() => select((index + 1) % slides.length), 9000);
+    if (slides.length > 1 && shouldRotate()) timer = setTimeout(() => { if(shouldRotate())select((index + 1) % slides.length); }, 9000);
   }
   function select(next) {
     if (!slides.length) return;
@@ -46,6 +46,7 @@
   }, { threshold: .06 }) : null;
 
   window.cinema = {
+    setMotion(enabled) { motionEnabled = enabled; pause.disabled = !enabled; schedule(); },
     updateBackdrop,
     setSlides(titles) {
       slides = titles.filter(title => title.backdrop).slice(0, 5);
@@ -83,6 +84,7 @@
   hero.addEventListener('focusin', () => { focused = true; schedule(); });
   hero.addEventListener('focusout', event => { if (!hero.contains(event.relatedTarget)) { focused = false; schedule(); } });
   document.addEventListener('visibilitychange', schedule);
+  new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['class']});
   reduceMotion.addEventListener('change', event => {
     paused = event.matches;
     pause.setAttribute('aria-pressed', paused);

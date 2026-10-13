@@ -17,6 +17,9 @@
       image: asset(entry.image), backdrop: asset(entry.backdrop),
       ...(Array.isArray(entry.seasons) ? { seasons: entry.seasons.slice(0, 100).map(count => Number.isInteger(count) && count > 0 ? Math.min(count, 1000) : 1) } : {}),
       watchedAt: Number.isFinite(entry.watchedAt) && entry.watchedAt > 0 ? entry.watchedAt : 0,
+      time: Number.isFinite(entry.time) && entry.time >= 0 && entry.time <= 86400 ? entry.time : 0,
+      duration: Number.isFinite(entry.duration) && entry.duration > 0 && entry.duration <= 86400 ? entry.duration : 0,
+      completed: entry.completed === true,
       season: Math.max(1, Math.min(Number.parseInt(entry.season, 10) || 1, 100)),
       episode: Math.max(1, Math.min(Number.parseInt(entry.episode, 10) || 1, 1000))
     };
@@ -41,7 +44,14 @@
         const entries = read(username).filter(item => item.id !== entry.id || item.type !== entry.type);
         return write(username, [entry, ...entries].slice(0, 24));
       },
-      remove(username, movie) { return write(username, read(username).filter(item => item.id !== movie.id || item.type !== movie.type)); }
+      remove(username, movie) { return write(username, read(username).filter(item => item.id !== movie.id || item.type !== movie.type)); },
+      progress(username, movie, time, duration, completed = false) {
+        if (!Number.isFinite(time) || time < 0 || time > 86400 || !Number.isFinite(duration) || duration < 0 || duration > 86400) return false;
+        const entries = read(username); const entry = entries.find(item => item.id === movie.id && item.type === movie.type);
+        if (!entry) return false;
+        entry.time = time; entry.duration = duration; entry.completed = completed || (duration > 0 && time >= duration - 20 && time / duration > .9);
+        return write(username, entries);
+      }
     };
   }
   if (typeof module !== 'undefined' && module.exports) module.exports = { create, normalize };
