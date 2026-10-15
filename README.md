@@ -19,7 +19,7 @@ Run `npm ci`, then `node scripts/serve.mjs` and open http://127.0.0.1:4173. The 
 - Phone bottom navigation and reduced-motion support
 - Server-verified member login with a scrypt password hash and an eight-hour HttpOnly session cookie
 - Personal welcomes and account settings for persistent display names and password changes
-- Time-aware greetings for every account, replacing the fixed dashboard headline
+- Time-aware greetings for every account: “Mayng bungkag” in the morning, “Good afternoon” in the afternoon, and “Mayng gabie” in the evening
 - Kristine-only blush pink dashboard with a saved pink-on-charcoal dark mode; Waken and Guest use the charcoal/red screening-room layout
 - A Preferences shelf immediately after Trending now for Kristine: Shrek, Tangled (Rapunzel), Beauty and the Beast (1991), Mulan (1998), and The Avengers; live metadata with bundled fallback posters
 - Waken's redesigned screening-room dashboard, with real TMDB title logos in the rotating spotlight and a readable text fallback for unavailable logos

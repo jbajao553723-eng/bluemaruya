@@ -50,10 +50,9 @@
 
   function greetingForTime(date = new Date()) {
     const hour = date.getHours();
-    if (hour >= 5 && hour < 12) return { lead: 'Magandang umaga', punctuation: '.', subtitle: 'Fresh picks for a fresh start.' };
-    if (hour >= 12 && hour < 17) return { lead: 'Kamusta', punctuation: '?', subtitle: 'Take a break. Your next story is ready.' };
-    if (hour >= 17 && hour < 22) return { lead: 'Magandang gabi', punctuation: '.', subtitle: 'Settle in. Something good is waiting.' };
-    return { lead: 'Still awake', punctuation: '?', subtitle: 'One more story, at your own pace.' };
+    if (hour >= 5 && hour < 12) return { lead: 'Mayng bungkag', punctuation: '.', subtitle: 'Fresh picks for a fresh start.' };
+    if (hour >= 12 && hour < 18) return { lead: 'Good afternoon', punctuation: '.', subtitle: 'Take a break. Your next story is ready.' };
+    return { lead: 'Mayng gabie', punctuation: '.', subtitle: 'Settle in. Something good is waiting.' };
   }
   function updateGreeting() {
     if (!member) return;
