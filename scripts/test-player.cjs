@@ -34,5 +34,8 @@ monitor.begin();monitor.stop();tick(60000);assert.equal(monitor.phase(),'idle');
 monitor.begin(149);monitor.accept({type:'cinesrc:timeupdate',time:149});assert.equal(monitor.phase(),'connecting','A restored timestamp alone is not progress');monitor.accept({type:'cinesrc:timeupdate',time:150});assert.equal(monitor.phase(),'playing');monitor.stop();
 const data = new Map();const prefs = create({getItem:key=>data.get(key),setItem:(key,value)=>data.set(key,value)});
 assert.equal(prefs.read('wakengwapo').quality,'480');assert.equal(prefs.save('wakengwapo',{quality:'720',motion:false}),true);assert.equal(prefs.read('kdumangas').quality,'480');assert.equal(prefs.read('wakengwapo').motion,false);
+assert.equal(prefs.read('kdumangas').theme,'light');assert.equal(prefs.save('kdumangas',{theme:'dark'}),true);assert.equal(prefs.read('kdumangas').theme,'dark');
+assert.equal(prefs.read('guest').quality,'480');assert.equal(prefs.read('guest').theme,'light');assert.equal(prefs.save('guest',{quality:'1080'}),true);assert.equal(prefs.read('wakengwapo').quality,'720');
 assert.equal(prefs.save('wakengwapo',{quality:'fake'}),false);assert.equal(prefs.save('wakengwapo',{server:'//evil'}),false);
+assert.equal(prefs.save('kdumangas',{theme:'neon'}),false);
 console.log('PASS player: real quality/resume URL parameters, fresh retries, strict origin/source checks, sanitized events, bounded timers, stalled/error states, pause handling, cleanup, and isolated preferences.');

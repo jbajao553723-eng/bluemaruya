@@ -45,8 +45,15 @@ async function call(method, body, extra = {}, fn = handler) {
   const second = await call('POST', { username: 'kdumangas', password: secondPassword });
   assert.equal(second.statusCode, 200); assert.equal(second.body.displayName, 'kristine');
   const secondCookie = second.headers['Set-Cookie'];
+  const guestPassword = process.env.TEST_GUEST_PASSWORD;
+  assert.ok(guestPassword, 'TEST_GUEST_PASSWORD is required');
+  const guest = await call('POST', { username: 'guest', password: guestPassword });
+  assert.equal(guest.statusCode, 200); assert.equal(guest.body.displayName, 'guest');
+  const guestCookie = guest.headers['Set-Cookie'];
+  assert.equal((await call('GET', null, {cookie:guestCookie})).body.username, 'guest');
   assert.equal((await call('POST', { username: 'kdumangas', password })).statusCode, 401);
   assert.equal((await call('POST', { username: 'wakengwapo', password: secondPassword })).statusCode, 401);
+  assert.equal((await call('POST', { username: 'guest', password: secondPassword })).statusCode, 401);
   assert.equal((await call('PATCH', {action:'profile', displayName:'No account'})).statusCode, 401);
   assert.equal((await call('PATCH', {action:'profile', displayName:'<script>'}, {cookie})).statusCode, 400);
   assert.equal((await call('PATCH', {action:'profile', displayName:'Name'}, {cookie, origin:'https://example.com'})).statusCode, 403);
@@ -54,6 +61,7 @@ async function call(method, body, extra = {}, fn = handler) {
   assert.equal(renamed.statusCode, 200); assert.equal(renamed.body.username, 'wakengwapo');
   assert.equal((await call('GET', null, {cookie})).body.displayName, 'Waken Cinema');
   assert.equal((await call('GET', null, {cookie:secondCookie})).body.displayName, 'kristine');
+  assert.equal((await call('GET', null, {cookie:guestCookie})).body.displayName, 'guest');
   assert.equal((await call('POST', {username:'wakengwapo',password})).body.displayName, 'Waken Cinema');
   assert.equal((await call('PATCH', {action:'password', currentPassword:'wrong', newPassword:crypto.randomBytes(12).toString('hex')}, {cookie})).statusCode, 400);
   assert.equal((await call('PATCH', {action:'password', currentPassword:password, newPassword:'short'}, {cookie})).statusCode, 400);
@@ -74,5 +82,5 @@ async function call(method, body, extra = {}, fn = handler) {
   assert.ok(!JSON.stringify(changed.body).includes('hash'));
   for(let i=0;i<8;i++)assert.equal((await call('POST',{username:'bad',password:'bad'},{'x-forwarded-for':'test-rate-limit'})).statusCode,401);
   assert.equal((await call('POST',{username:'bad',password:'bad'},{'x-forwarded-for':'test-rate-limit'})).statusCode,429);
-  console.log('PASS: both accounts, isolated profiles, persistent name/password changes, old-password rejection, session revocation, concurrent-write protection, cookie security, origin checks, throttling, and private catalog.');
+  console.log('PASS: three accounts, isolated profiles, persistent name/password changes, old-password rejection, session revocation, concurrent-write protection, cookie security, origin checks, throttling, and private catalog.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

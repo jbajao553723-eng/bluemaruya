@@ -1,6 +1,6 @@
 // Local viewing history is keyed by immutable account username, never display name.
 ((root) => {
-  const accounts = ['wakengwapo', 'kdumangas'];
+  const accounts = ['wakengwapo', 'kdumangas', 'guest'];
   const key = username => {
     if (!accounts.includes(username)) throw new Error('A signed-in member is required');
     return `blue-maruya-history:${username}`;

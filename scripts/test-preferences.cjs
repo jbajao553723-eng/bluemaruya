@@ -51,6 +51,8 @@ async function home(username,query={mode:'home'}) {
   assert.equal(kristine.body.preferences[3].image,'preference-mulan.jpg','A failed individual title keeps its bundled fallback');
   assert.ok(kristine.body.movies.length && kristine.body.trending.length,'Preference outages must not break the home catalog');
   assert.equal((await home('wakengwapo')).body.preferences,undefined,'Switching accounts must not reuse personalized data');
+  const guest = await home('guest');
+  assert.equal(guest.statusCode,200);assert.equal(guest.body.preferences,undefined,'Guest uses the shared catalog without Kristine-only picks');
   for(const pick of picks) assert.ok(existsSync(join(__dirname,'../dist/assets',pick.image)),`Missing fallback poster for ${pick.title}`);
   assert.ok(existsSync(join(__dirname,'../dist/assets/preference-tangled-backdrop.jpg')));
   console.log('PASS preferences: authentication, account isolation, five exact movie IDs, live metadata, individual-title fallback, and bundled artwork.');

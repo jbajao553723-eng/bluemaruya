@@ -15,11 +15,12 @@
   const changePasswordForm = document.querySelector('#changePasswordForm');
   const rememberUsername = document.querySelector('#rememberUsername');
   const profileChoices = [...document.querySelectorAll('[data-login-member]')];
+  const allowedMembers = ['wakengwapo', 'kdumangas', 'guest'];
   function selectProfile(username) {
     profileChoices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.loginMember === username)));
-    document.body.dataset.loginMember = username === 'kdumangas' ? 'kristine' : 'waken';
+    document.body.dataset.loginMember = username === 'kdumangas' ? 'kristine' : username === 'guest' ? 'guest' : 'waken';
   }
-  try { const saved = localStorage.getItem('blue-maruya-login-username'); if (['wakengwapo','kdumangas'].includes(saved)) { form.username.value = saved; rememberUsername.checked = true; selectProfile(saved); } } catch {}
+  try { const saved = localStorage.getItem('blue-maruya-login-username'); if (allowedMembers.includes(saved)) { form.username.value = saved; rememberUsername.checked = true; selectProfile(saved); } } catch {}
   profileChoices.forEach(button => button.addEventListener('click', () => { form.username.value = button.dataset.loginMember; selectProfile(form.username.value); password.focus(); }));
   form.username.addEventListener('input', () => selectProfile(form.username.value.trim()));
   password.addEventListener('keyup', event => { document.querySelector('#capsLockHint').hidden = !event.getModifierState?.('CapsLock'); });
@@ -34,17 +35,48 @@
     if (!member) return;
     const prefs = window.memberPreferencesStore.read(member.username);
     document.body.dataset.motion = prefs.motion ? 'on' : 'off';
+    if (member.username === 'kdumangas') document.body.dataset.kristineMode = prefs.theme;
+    else delete document.body.dataset.kristineMode;
+    const darkKristine = member.username === 'kdumangas' && prefs.theme === 'dark';
+    document.documentElement.dataset.bsTheme = darkKristine || member.username !== 'kdumangas' ? 'dark' : 'light';
+    document.querySelector('meta[name="theme-color"]').content = darkKristine ? '#0d0910' : member.username === 'kdumangas' ? '#fff6fa' : '#090909';
+    const themeToggle = document.querySelector('#kristineThemeToggle');
+    themeToggle.setAttribute('aria-pressed', String(darkKristine));
+    themeToggle.setAttribute('aria-label', darkKristine ? 'Switch Kristine dashboard to light mode' : 'Switch Kristine dashboard to dark mode');
+    themeToggle.querySelector('span').textContent = darkKristine ? '☀' : '☾';
+    themeToggle.querySelector('b').textContent = darkKristine ? 'Light mode' : 'Dark mode';
     window.cinema.setMotion(prefs.motion);
+  }
+
+  function greetingForTime(date = new Date()) {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return { lead: 'Magandang umaga', punctuation: '.', subtitle: 'Fresh picks for a fresh start.' };
+    if (hour >= 12 && hour < 17) return { lead: 'Kamusta', punctuation: '?', subtitle: 'Take a break. Your next story is ready.' };
+    if (hour >= 17 && hour < 22) return { lead: 'Magandang gabi', punctuation: '.', subtitle: 'Settle in. Something good is waiting.' };
+    return { lead: 'Still awake', punctuation: '?', subtitle: 'One more story, at your own pace.' };
+  }
+  function updateGreeting() {
+    if (!member) return;
+    const greeting = greetingForTime();
+    document.querySelector('#wakenGreetingLead').textContent = greeting.lead;
+    document.querySelector('#dashboardGreetingLead').textContent = greeting.lead;
+    document.querySelector('#wakenGreetingPunctuation').textContent = greeting.punctuation;
+    document.querySelector('#dashboardGreetingPunctuation').textContent = greeting.punctuation;
+    document.querySelector('#wakenGreetingSubtitle').textContent = greeting.subtitle;
+    document.querySelector('#kristineGreetingSubtitle').textContent = greeting.subtitle;
+    const dateLabel = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date()).toUpperCase();
+    document.querySelector('#wakenDateLabel').textContent = dateLabel;
+    document.querySelector('#kristineDateLabel').textContent = dateLabel;
   }
 
   function updateMember(data) {
     member = { username: data.username, displayName: data.displayName || data.username };
     const pink = member.username === 'kdumangas';
     document.body.dataset.memberTheme = pink ? 'kristine' : 'waken';
-    document.documentElement.dataset.bsTheme = pink ? 'light' : 'dark';
-    document.querySelector('meta[name="theme-color"]').content = pink ? '#fff6fa' : '#090909';
+    document.body.dataset.memberAccount = member.username;
     document.querySelector('#dashboardMemberName').textContent = member.displayName;
     document.querySelector('#wakenDisplayName').textContent = member.displayName;
+    document.querySelector('#screeningRoomLabel').textContent = member.username === 'guest' ? 'YOUR GUEST SCREENING ROOM' : 'YOUR PRIVATE SCREENING ROOM';
     document.querySelector('#memberName').textContent = member.displayName;
     document.querySelector('#memberUsername').textContent = '@' + member.username;
     document.querySelector('#memberWelcome').textContent = 'Welcome, ' + member.displayName;
@@ -53,6 +85,7 @@
     document.querySelector('#settingsMemberName').textContent = member.displayName;
     document.querySelector('#settingsUsername').textContent = '@' + member.username;
     applyPreferences();
+    updateGreeting();
   }
   function toast(text) {
     const element = document.querySelector('#toast');
@@ -70,6 +103,8 @@
     ++authGeneration;
     member = null;
     delete document.body.dataset.memberTheme;
+    delete document.body.dataset.memberAccount;
+    delete document.body.dataset.kristineMode;
     delete document.body.dataset.motion;
     window.cinema.setMotion(true);
     document.documentElement.dataset.bsTheme = 'dark';
@@ -178,6 +213,8 @@
     const preferences = window.memberPreferencesStore.read(member.username);
     document.querySelector('#preferredQuality').value = preferences.quality;
     document.querySelector('#enableMotion').checked = preferences.motion;
+    document.querySelector('#kristineDarkModeRow').hidden = member.username !== 'kdumangas';
+    document.querySelector('#kristineDarkMode').checked = preferences.theme === 'dark';
     settingsMessage('#experienceMessage','');
     changePasswordForm.reset(); settingsMessage('#profileMessage', ''); settingsMessage('#passwordMessage', '');
     settings.showModal(); document.body.classList.add('dialog-open');
@@ -200,7 +237,15 @@
     finally { button.disabled = false; }
   }
   profileForm.addEventListener('submit', event => { event.preventDefault(); saveSettings(profileForm, '#profileMessage', { action: 'profile', displayName: profileForm.displayName.value }); });
-  document.querySelector('#experienceForm').addEventListener('submit', event => { event.preventDefault(); if(!member)return; const saved = window.memberPreferencesStore.save(member.username,{quality:document.querySelector('#preferredQuality').value,motion:document.querySelector('#enableMotion').checked}); if(saved)applyPreferences(); settingsMessage('#experienceMessage',saved?'Your preferences have been saved.':'Preferences could not be saved on this device.',!saved); });
+  document.querySelector('#experienceForm').addEventListener('submit', event => { event.preventDefault(); if(!member)return; const saved = window.memberPreferencesStore.save(member.username,{quality:document.querySelector('#preferredQuality').value,motion:document.querySelector('#enableMotion').checked,theme:member.username === 'kdumangas'&&document.querySelector('#kristineDarkMode').checked?'dark':'light'}); if(saved)applyPreferences(); settingsMessage('#experienceMessage',saved?'Your preferences have been saved.':'Preferences could not be saved on this device.',!saved); });
+  document.querySelector('#kristineThemeToggle').addEventListener('click', () => {
+    if (member?.username !== 'kdumangas') return;
+    const preferences = window.memberPreferencesStore.read(member.username);
+    if (window.memberPreferencesStore.save(member.username, { theme: preferences.theme === 'dark' ? 'light' : 'dark' })) {
+      applyPreferences();
+      toast(document.body.dataset.kristineMode === 'dark' ? 'Dark mode is on' : 'Light mode is on');
+    }
+  });
   changePasswordForm.addEventListener('submit', event => {
     event.preventDefault();
     if (changePasswordForm.newPassword.value !== changePasswordForm.confirmPassword.value) { settingsMessage('#passwordMessage', 'Your new passwords do not match.', true); return; }
@@ -211,5 +256,6 @@
   window.addEventListener('pageshow', event => { if (event.persisted) checkSession(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && signedIn) checkSession(); });
   setInterval(() => { if (signedIn && !document.hidden) checkSession(); }, 5 * 60 * 1000);
+  setInterval(() => { if (signedIn && !document.hidden) updateGreeting(); }, 60 * 1000);
   checkSession();
 })();
