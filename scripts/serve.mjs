@@ -9,7 +9,7 @@ process.env.ACCOUNT_STORE_DIR ||= resolve('.local-members');
 const auth=require('../api/auth.js');
 const tmdb=require('../api/tmdb.js');
 const root=resolve('dist');
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml'};
+const types={'.webmanifest':'application/manifest+json; charset=utf-8','.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml'};
 createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,'http://localhost');

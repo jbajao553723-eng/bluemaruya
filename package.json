@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "test": "node scripts/test-auth.cjs && node scripts/test-preferences.cjs && node scripts/test-history.cjs && node scripts/test-player.cjs",
-    "test:preferences": "node scripts/test-preferences.cjs"
+    "test": "node scripts/test-auth.cjs && node scripts/test-preferences.cjs && node scripts/test-history.cjs && node scripts/test-player.cjs && node scripts/test-discovery.cjs && node scripts/test-install.cjs",
+    "test:preferences": "node scripts/test-preferences.cjs",
+    "test:discovery": "node scripts/test-discovery.cjs",
+    "test:install": "node scripts/test-install.cjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1"

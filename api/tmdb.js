@@ -45,6 +45,7 @@ function certification(item, type) {
 }
 
 function formatTitle(item, typeHint, genresByType) {
+  if (item.adult) return null;
   const type = item.media_type === 'tv' || item.media_type === 'movie' ? item.media_type : typeHint;
   if (type !== 'movie' && type !== 'tv') return null;
   const date = type === 'tv' ? item.first_air_date : item.release_date;
@@ -66,7 +67,17 @@ function formatTitle(item, typeHint, genresByType) {
     backdrop: item.backdrop_path ? `${IMAGE_BASE}/w1280${item.backdrop_path}` : '',
     description: item.overview || 'No description is available for this title yet.',
     ...(item.images ? { logo: titleLogo(item.images) } : {}),
+    ...(item.credits || item.aggregate_credits ? { cast: ((item.credits || item.aggregate_credits).cast || []).filter(person => !person.adult).slice(0, 12).map(formatPerson) } : {}),
     ...(seasons ? { seasons } : {})
+  };
+}
+
+function formatPerson(person) {
+  return {
+    id: person.id, name: person.name,
+    image: person.profile_path ? `${IMAGE_BASE}/w185${person.profile_path}` : '',
+    character: person.character || person.roles?.map(role => role.character).filter(Boolean).slice(0, 2).join(', ') || '',
+    knownFor: (person.known_for || []).filter(title => !title.adult).map(title => title.title || title.name).filter(Boolean).slice(0, 3).join(' · ')
   };
 }
 
@@ -130,6 +141,28 @@ module.exports = async function handler(req, res) {
     }
     const genres = await getGenres();
 
+    if (mode === 'genres') return send(res, 200, { genres });
+
+    if (mode === 'people') {
+      const query = String(req.query.query || '').trim().slice(0, 100);
+      const payload = await tmdb(query ? '/search/person' : '/person/popular', { query, page: boundedPage(req.query.page), include_adult: false });
+      return send(res, 200, { results: (payload.results || []).filter(person => !person.adult && (!person.known_for_department || person.known_for_department === 'Acting')).map(formatPerson), page: payload.page, totalPages: Math.min(payload.total_pages || 1, 500) });
+    }
+
+    if (mode === 'person') {
+      const id = Number(req.query.id);
+      if (!Number.isSafeInteger(id) || id < 1) return send(res, 400, { error: 'A valid actor ID is required' });
+      const person = await tmdb(`/person/${id}`, { append_to_response: 'combined_credits' });
+      if (person.adult) return send(res, 404, { error: 'Actor unavailable' });
+      const credits = [...(person.combined_credits?.cast || [])].filter(title => !title.adult).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      const unique = new Map();
+      for (const credit of credits) {
+        const title = formatTitle(credit, null, genres);
+        if (title && !unique.has(`${title.type}:${title.id}`)) unique.set(`${title.type}:${title.id}`, title);
+      }
+      return send(res, 200, { person: { ...formatPerson(person), biography: person.biography || '', birthplace: person.place_of_birth || '' }, results: [...unique.values()], page: 1, totalPages: 1 });
+    }
+
     if (mode === 'home') {
       const [trending, movies, tv, preferences] = await Promise.all([
         tmdb('/trending/all/week'),
@@ -161,7 +194,7 @@ module.exports = async function handler(req, res) {
       const type = req.query.type === 'tv' ? 'tv' : 'movie';
       const id = Number.parseInt(req.query.id, 10);
       if (!Number.isInteger(id) || id < 1) return send(res, 400, { error: 'A valid title ID is required' });
-      const append = type === 'movie' ? 'release_dates' : 'content_ratings';
+      const append = type === 'movie' ? 'release_dates,credits' : 'content_ratings,aggregate_credits';
       const item = await tmdb(`/${type}/${id}`, { append_to_response: append });
       return send(res, 200, { result: formatTitle(item, type, genres) });
     }

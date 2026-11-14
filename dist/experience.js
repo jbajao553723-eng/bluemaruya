@@ -75,7 +75,7 @@
     paused = !paused;
     pause.setAttribute('aria-pressed', paused);
     pause.setAttribute('aria-label', paused ? 'Resume featured rotation' : 'Pause featured rotation');
-    pause.textContent = paused ? '▷' : 'Ⅱ';
+    pause.innerHTML = `<svg${paused ? ' class="fill-icon"' : ''}><use href="${paused ? '#i-play' : '#i-pause'}"/></svg>`;
     schedule();
   });
   document.querySelector('#heroNext').addEventListener('click', () => select((index + 1) % slides.length));
@@ -89,7 +89,7 @@
     paused = event.matches;
     pause.setAttribute('aria-pressed', paused);
     pause.setAttribute('aria-label', paused ? 'Resume featured rotation' : 'Pause featured rotation');
-    pause.textContent = paused ? '▷' : 'Ⅱ';
+    pause.innerHTML = `<svg${paused ? ' class="fill-icon"' : ''}><use href="${paused ? '#i-play' : '#i-pause'}"/></svg>`;
     schedule();
   });
   const top = document.querySelector('#backTop');

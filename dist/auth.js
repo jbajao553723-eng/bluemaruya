@@ -35,16 +35,9 @@
     if (!member) return;
     const prefs = window.memberPreferencesStore.read(member.username);
     document.body.dataset.motion = prefs.motion ? 'on' : 'off';
-    if (member.username === 'kdumangas') document.body.dataset.kristineMode = prefs.theme;
-    else delete document.body.dataset.kristineMode;
-    const darkKristine = member.username === 'kdumangas' && prefs.theme === 'dark';
-    document.documentElement.dataset.bsTheme = darkKristine || member.username !== 'kdumangas' ? 'dark' : 'light';
-    document.querySelector('meta[name="theme-color"]').content = darkKristine ? '#0d0910' : member.username === 'kdumangas' ? '#fff6fa' : '#090909';
-    const themeToggle = document.querySelector('#kristineThemeToggle');
-    themeToggle.setAttribute('aria-pressed', String(darkKristine));
-    themeToggle.setAttribute('aria-label', darkKristine ? 'Switch Kristine dashboard to light mode' : 'Switch Kristine dashboard to dark mode');
-    themeToggle.querySelector('span').textContent = darkKristine ? '☀' : '☾';
-    themeToggle.querySelector('b').textContent = darkKristine ? 'Light mode' : 'Dark mode';
+    delete document.body.dataset.kristineMode;
+    document.documentElement.dataset.bsTheme = 'dark';
+    document.querySelector('meta[name="theme-color"]').content = '#111113';
     window.cinema.setMotion(prefs.motion);
   }
 
@@ -71,7 +64,7 @@
   function updateMember(data) {
     member = { username: data.username, displayName: data.displayName || data.username };
     const pink = member.username === 'kdumangas';
-    document.body.dataset.memberTheme = pink ? 'kristine' : 'waken';
+    document.body.dataset.memberTheme = 'cinema';
     document.body.dataset.memberAccount = member.username;
     document.querySelector('#dashboardMemberName').textContent = member.displayName;
     document.querySelector('#wakenDisplayName').textContent = member.displayName;
@@ -107,7 +100,7 @@
     delete document.body.dataset.motion;
     window.cinema.setMotion(true);
     document.documentElement.dataset.bsTheme = 'dark';
-    document.querySelector('meta[name="theme-color"]').content = '#090909';
+    document.querySelector('meta[name="theme-color"]').content = '#111113';
     document.querySelector('#memberDashboardIntro').hidden = true;
     document.querySelector('#wakenDashboardIntro').hidden = true;
     changePasswordForm.reset(); profileForm.reset();
@@ -212,7 +205,7 @@
     const preferences = window.memberPreferencesStore.read(member.username);
     document.querySelector('#preferredQuality').value = preferences.quality;
     document.querySelector('#enableMotion').checked = preferences.motion;
-    document.querySelector('#kristineDarkModeRow').hidden = member.username !== 'kdumangas';
+    document.querySelector('#kristineDarkModeRow').hidden = true;
     document.querySelector('#kristineDarkMode').checked = preferences.theme === 'dark';
     settingsMessage('#experienceMessage','');
     changePasswordForm.reset(); settingsMessage('#profileMessage', ''); settingsMessage('#passwordMessage', '');
@@ -236,7 +229,7 @@
     finally { button.disabled = false; }
   }
   profileForm.addEventListener('submit', event => { event.preventDefault(); saveSettings(profileForm, '#profileMessage', { action: 'profile', displayName: profileForm.displayName.value }); });
-  document.querySelector('#experienceForm').addEventListener('submit', event => { event.preventDefault(); if(!member)return; const saved = window.memberPreferencesStore.save(member.username,{quality:document.querySelector('#preferredQuality').value,motion:document.querySelector('#enableMotion').checked,theme:member.username === 'kdumangas'&&document.querySelector('#kristineDarkMode').checked?'dark':'light'}); if(saved)applyPreferences(); settingsMessage('#experienceMessage',saved?'Your preferences have been saved.':'Preferences could not be saved on this device.',!saved); });
+  document.querySelector('#experienceForm').addEventListener('submit', event => { event.preventDefault(); if(!member)return; const saved = window.memberPreferencesStore.save(member.username,{quality:document.querySelector('#preferredQuality').value,motion:document.querySelector('#enableMotion').checked}); if(saved)applyPreferences(); settingsMessage('#experienceMessage',saved?'Your preferences have been saved.':'Preferences could not be saved on this device.',!saved); });
   document.querySelector('#kristineThemeToggle').addEventListener('click', () => {
     if (member?.username !== 'kdumangas') return;
     const preferences = window.memberPreferencesStore.read(member.username);

@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T05:41:07.072455+00:00",
+  "title": "Design System: blue maruya",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Charcoal canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.0041 285.98)",
+          "oklch(26.43% 0.0041 285.98)",
+          "oklch(37.86% 0.0041 285.98)",
+          "oklch(49.29% 0.0041 285.98)",
+          "oklch(60.71% 0.0041 285.98)",
+          "oklch(72.14% 0.0041 285.98)",
+          "oklch(83.57% 0.0041 285.98)",
+          "oklch(95.00% 0.0041 285.98)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Quiet surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.0077 285.78)",
+          "oklch(26.43% 0.0077 285.78)",
+          "oklch(37.86% 0.0077 285.78)",
+          "oklch(49.29% 0.0077 285.78)",
+          "oklch(60.71% 0.0077 285.78)",
+          "oklch(72.14% 0.0077 285.78)",
+          "oklch(83.57% 0.0077 285.78)",
+          "oklch(95.00% 0.0077 285.78)"
+        ]
+      },
+      "glass": {
+        "role": "neutral",
+        "displayName": "Raised charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0092 285.76)",
+          "oklch(26.43% 0.0092 285.76)",
+          "oklch(37.86% 0.0092 285.76)",
+          "oklch(49.29% 0.0092 285.76)",
+          "oklch(60.71% 0.0092 285.76)",
+          "oklch(72.14% 0.0092 285.76)",
+          "oklch(83.57% 0.0092 285.76)",
+          "oklch(95.00% 0.0092 285.76)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Warm white",
+        "tonalRamp": [
+          "oklch(15.00% 0.0029 84.56)",
+          "oklch(26.43% 0.0029 84.56)",
+          "oklch(37.86% 0.0029 84.56)",
+          "oklch(49.29% 0.0029 84.56)",
+          "oklch(60.71% 0.0029 84.56)",
+          "oklch(72.14% 0.0029 84.56)",
+          "oklch(83.57% 0.0029 84.56)",
+          "oklch(95.00% 0.0029 84.56)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Soft gray",
+        "tonalRamp": [
+          "oklch(15.00% 0.0034 17.23)",
+          "oklch(26.43% 0.0034 17.23)",
+          "oklch(37.86% 0.0034 17.23)",
+          "oklch(49.29% 0.0034 17.23)",
+          "oklch(60.71% 0.0034 17.23)",
+          "oklch(72.14% 0.0034 17.23)",
+          "oklch(83.57% 0.0034 17.23)",
+          "oklch(95.00% 0.0034 17.23)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Cinema coral",
+        "tonalRamp": [
+          "oklch(15.00% 0.1680 29.85)",
+          "oklch(26.43% 0.1680 29.85)",
+          "oklch(37.86% 0.1680 29.85)",
+          "oklch(49.29% 0.1680 29.85)",
+          "oklch(60.71% 0.1680 29.85)",
+          "oklch(72.14% 0.1680 29.85)",
+          "oklch(83.57% 0.1680 29.85)",
+          "oklch(95.00% 0.1680 29.85)"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Warm accent ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0301 34.02)",
+          "oklch(26.43% 0.0301 34.02)",
+          "oklch(37.86% 0.0301 34.02)",
+          "oklch(49.29% 0.0301 34.02)",
+          "oklch(60.71% 0.0301 34.02)",
+          "oklch(72.14% 0.0301 34.02)",
+          "oklch(83.57% 0.0301 34.02)",
+          "oklch(95.00% 0.0301 34.02)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Coral hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.1432 31.02)",
+          "oklch(26.43% 0.1432 31.02)",
+          "oklch(37.86% 0.1432 31.02)",
+          "oklch(49.29% 0.1432 31.02)",
+          "oklch(60.71% 0.1432 31.02)",
+          "oklch(72.14% 0.1432 31.02)",
+          "oklch(83.57% 0.1432 31.02)",
+          "oklch(95.00% 0.1432 31.02)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Panel border",
+        "tonalRamp": [
+          "oklch(15.00% 0.0120 285.78)",
+          "oklch(26.43% 0.0120 285.78)",
+          "oklch(37.86% 0.0120 285.78)",
+          "oklch(49.29% 0.0120 285.78)",
+          "oklch(60.71% 0.0120 285.78)",
+          "oklch(72.14% 0.0120 285.78)",
+          "oklch(83.57% 0.0120 285.78)",
+          "oklch(95.00% 0.0120 285.78)"
+        ]
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "Control border",
+        "tonalRamp": [
+          "oklch(15.00% 0.0115 305.23)",
+          "oklch(26.43% 0.0115 305.23)",
+          "oklch(37.86% 0.0115 305.23)",
+          "oklch(49.29% 0.0115 305.23)",
+          "oklch(60.71% 0.0115 305.23)",
+          "oklch(72.14% 0.0115 305.23)",
+          "oklch(83.57% 0.0115 305.23)",
+          "oklch(95.00% 0.0115 305.23)"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0074 285.87)",
+          "oklch(26.43% 0.0074 285.87)",
+          "oklch(37.86% 0.0074 285.87)",
+          "oklch(49.29% 0.0074 285.87)",
+          "oklch(60.71% 0.0074 285.87)",
+          "oklch(72.14% 0.0074 285.87)",
+          "oklch(83.57% 0.0074 285.87)",
+          "oklch(95.00% 0.0074 285.87)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary control",
+        "tonalRamp": [
+          "oklch(15.00% 0.0056 285.98)",
+          "oklch(26.43% 0.0056 285.98)",
+          "oklch(37.86% 0.0056 285.98)",
+          "oklch(49.29% 0.0056 285.98)",
+          "oklch(60.71% 0.0056 285.98)",
+          "oklch(72.14% 0.0056 285.98)",
+          "oklch(83.57% 0.0056 285.98)",
+          "oklch(95.00% 0.0056 285.98)"
+        ]
+      },
+      "secondary-hover": {
+        "role": "neutral",
+        "displayName": "Secondary hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.0092 303.93)",
+          "oklch(26.43% 0.0092 303.93)",
+          "oklch(37.86% 0.0092 303.93)",
+          "oklch(49.29% 0.0092 303.93)",
+          "oklch(60.71% 0.0092 303.93)",
+          "oklch(72.14% 0.0092 303.93)",
+          "oklch(83.57% 0.0092 303.93)",
+          "oklch(95.00% 0.0092 303.93)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Light coral focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.0986 31.60)",
+          "oklch(26.43% 0.0986 31.60)",
+          "oklch(37.86% 0.0986 31.60)",
+          "oklch(49.29% 0.0986 31.60)",
+          "oklch(60.71% 0.0986 31.60)",
+          "oklch(72.14% 0.0986 31.60)",
+          "oklch(83.57% 0.0986 31.60)",
+          "oklch(95.00% 0.0986 31.60)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Spotlight display",
+        "purpose": "Hero titles; mobile override is defined in the stylesheet."
+      },
+      "headline": {
+        "displayName": "Shelf headline",
+        "purpose": "Browsing sections."
+      },
+      "title": {
+        "displayName": "Film title",
+        "purpose": "Two-line title below artwork."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "General reading text."
+      },
+      "label": {
+        "displayName": "Action label",
+        "purpose": "Primary and secondary buttons."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Year and genre details."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog",
+        "value": "0 20px 70px #0008",
+        "purpose": "Diffuse elevation for dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-color",
+        "value": "background-color .18s, border-color .18s, color .18s",
+        "purpose": "Button state feedback."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none!important; transition: none!important; scroll-behavior: auto!important",
+        "purpose": "Applied to cinematic elements when reduced motion is requested."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-search",
+        "value": "1200px"
+      },
+      {
+        "name": "home-toolbar-row",
+        "value": "1000px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "900px"
+      },
+      {
+        "name": "mobile",
+        "value": "767px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "description": "Coral primary action with dark text.",
+      "html": "<button class=\"ds-primary\">Watch now</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:11px 21px;border-radius:8px;font:700 14px/1.6 \"DM Sans\",sans-serif;letter-spacing:0;box-shadow:none;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s;background:var(--accent,#ee6957);color:#21100c;border:1px solid transparent}.ds-primary:hover{background:#ff8c78;color:#21100c}.ds-primary:focus-visible{outline:3px solid #ffae9e;outline-offset:4px}.ds-primary:disabled{opacity:.45;cursor:not-allowed} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}",
+      "refersTo": "button-primary"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "description": "Outlined supporting action.",
+      "html": "<button class=\"ds-secondary\">More info</button>",
+      "css": ".ds-secondary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:11px 21px;border-radius:8px;font:700 14px/1.6 \"DM Sans\",sans-serif;letter-spacing:0;box-shadow:none;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s;background:#202023;color:var(--text,#faf9f7);border:1px solid #656269}.ds-secondary:hover{background:#333136;border-color:#d3cbcc}.ds-secondary:focus-visible{outline:3px solid #ffae9e;outline-offset:4px}.ds-secondary:disabled{opacity:.45;cursor:not-allowed} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}",
+      "refersTo": "button-secondary"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "description": "Readable field with a coral focus boundary.",
+      "html": "<label class=\"ds-field-label\">Username<input class=\"ds-field\" placeholder=\"Enter your username\" autocomplete=\"username\"></label>",
+      "css": ".ds-field-label{display:grid;gap:8px;font:400 14px/1.6 \"DM Sans\",sans-serif;color:var(--text,#faf9f7)}.ds-field{min-height:48px;padding:6px 12px;background:#232327;border:1px solid #656269;border-radius:8px;color:var(--text,#faf9f7);font:400 16px/1.6 \"DM Sans\",sans-serif;caret-color:var(--accent,#ee6957);box-shadow:none}.ds-field::placeholder{color:var(--muted,#b9b6b6)}.ds-field:focus{border-color:var(--accent,#ee6957);background:#29272c}.ds-field:focus-visible{outline:3px solid #ffae9e;outline-offset:4px} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}",
+      "refersTo": "field"
+    },
+    {
+      "name": "Genre chips",
+      "kind": "chip",
+      "description": "Quiet genre options with a coral selected state.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">All genres</button><button class=\"ds-chip\" aria-pressed=\"false\">Action</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px;overflow-x:auto}.ds-chip{border:1px solid transparent;background:transparent;color:var(--text,#faf9f7);border-radius:22px;padding:10px 18px;min-height:44px;font:400 14px/1.6 \"DM Sans\",sans-serif;white-space:nowrap;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s}.ds-chip[aria-pressed=\"true\"]{background:var(--accent,#ee6957);color:#21100c;font-weight:700}.ds-chip:hover:not([aria-pressed=\"true\"]){background:#2c292f}.ds-chip:focus-visible{outline:3px solid #ffae9e;outline-offset:4px} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}",
+      "refersTo": "chip-selected"
+    },
+    {
+      "name": "Desktop navigation",
+      "kind": "nav",
+      "description": "Text destinations and a coral active indicator.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><button class=\"ds-link\" aria-current=\"page\">Discover</button><button class=\"ds-link\">Movies</button><button class=\"ds-link\">Actors</button></nav>",
+      "css": ".ds-nav{display:flex;gap:22px;background:var(--bg,#111113);height:76px;align-items:stretch}.ds-link{position:relative;background:transparent;border:0;padding:0;font:600 13px/1.6 \"DM Sans\",sans-serif;color:var(--muted,#b9b6b6);cursor:pointer;transition:color .18s}.ds-link:hover,.ds-link[aria-current=\"page\"]{color:var(--text,#faf9f7)}.ds-link[aria-current=\"page\"]::after{content:\"\";position:absolute;bottom:13px;left:0;right:0;height:3px;background:var(--accent,#ee6957);border-radius:3px}.ds-link:focus-visible{outline:3px solid #ffae9e;outline-offset:4px} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}"
+    },
+    {
+      "name": "Empty history panel",
+      "kind": "card",
+      "description": "An honest empty state with a browsing action.",
+      "html": "<section class=\"ds-empty\"><div><h2 class=\"ds-empty-title\">Recently watched</h2><p class=\"ds-empty-copy\">Your movie nights will appear here. History is private to your account on this device.</p></div><button class=\"ds-empty-action\">Find a movie</button></section>",
+      "css": ".ds-empty{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;padding:24px;border:1px solid var(--border,#3c3c43);background:var(--surface,#1c1c20);color:var(--text,#faf9f7);border-radius:12px}.ds-empty-title{margin:0 0 8px;font:700 22px/1.2 \"Manrope\",sans-serif;letter-spacing:-.03em}.ds-empty-copy{margin:0;font:400 14px/1.6 \"DM Sans\",sans-serif;color:var(--muted,#b9b6b6)}.ds-empty-action{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:11px 21px;border-radius:8px;font:700 14px/1.6 \"DM Sans\",sans-serif;letter-spacing:0;box-shadow:none;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s;background:#202023;color:var(--text,#faf9f7);border:1px solid #656269}.ds-empty-action:hover{background:#333136;border-color:#d3cbcc}.ds-empty-action:focus-visible{outline:3px solid #ffae9e;outline-offset:4px} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}",
+      "refersTo": "empty-card"
+    },
+    {
+      "name": "Profile choice",
+      "kind": "custom",
+      "description": "Equal profile options retain one visual theme.",
+      "html": "<div class=\"ds-profiles\" role=\"group\" aria-label=\"Choose your cinema profile\"><button class=\"ds-profile\" aria-pressed=\"true\"><span class=\"ds-avatar\">W</span>Waken</button><button class=\"ds-profile\" aria-pressed=\"false\"><span class=\"ds-avatar\">K</span>Kristine</button><button class=\"ds-profile\" aria-pressed=\"false\"><span class=\"ds-avatar\">G</span>Guest</button></div>",
+      "css": ".ds-profiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.ds-profile{display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:12px 8px;background:#1c1c20;border:1px solid #656269;border-radius:8px;color:var(--text,#faf9f7);font:700 13px/1.6 \"DM Sans\",sans-serif;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s}.ds-profile[aria-pressed=\"true\"]{border-color:#ff9987;background:#372723}.ds-avatar{display:grid;place-items:center;background:#454047;color:#fff;font-size:12px;width:28px;height:28px;border-radius:50%}.ds-profile[aria-pressed=\"true\"] .ds-avatar{background:var(--accent,#ee6957);color:#21100c}.ds-profile:focus-visible{outline:3px solid #ffae9e;outline-offset:4px} @media(prefers-reduced-motion:reduce){[class^=\"ds-\"]{transition:none!important;animation:none!important}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Cinematic streaming",
+    "overview": "The approved world is an understated charcoal cinema with warm coral controls and real film artwork. Bold, closely spaced headings provide direction while the quiet surrounding interface gives posters and photographs room to carry the mood.\n\nOne visual identity serves Waken, Kristine, and Guest. Their account content remains individual. This document records the implemented system from `dist/cinematic.css` and its supporting HTML and stylesheet cascade; the first-surface composition belongs in `.impeccable/cinematic-surfaces.md`.",
+    "keyCharacteristics": [
+      "Charcoal surfaces and restrained coral emphasis.",
+      "Manrope headings with DM Sans reading text and controls.",
+      "Real movie imagery, softly rounded artwork, and clear action labels.",
+      "Shared visual identity with account-specific content."
+    ],
+    "rules": [
+      {
+        "name": "The Shared Cinema Rule",
+        "body": "Keep the charcoal and coral identity consistent across all member profiles; personalization belongs to content and account state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Artwork First Rule",
+        "body": "Use contrast and tonal separation to frame the film artwork; do not add decorative glow to cards or rank labels.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the shared charcoal and coral identity across all three profiles.",
+      "**Do** use real title artwork and actual per-account viewing progress.",
+      "**Do** preserve visible keyboard focus, readable metadata, and explicit loading, empty, and retry states.",
+      "**Do** keep login and dashboard as separate screens."
+    ],
+    "donts": [
+      "**Don't** turn illustrative mockup titles, artwork, or progress into fabricated account activity.",
+      "**Don't** restore personal color themes, glowing ranks, or decorative pulses.",
+      "**Don't** replace real movie imagery with the approved mockup's illustrative placeholders."
+    ]
+  }
+}

@@ -14,7 +14,7 @@
     screen.querySelector('.login-scene').classList.toggle('is-paused', paused);
     pause.setAttribute('aria-pressed', String(paused));
     pause.setAttribute('aria-label', paused ? 'Resume background rotation' : 'Pause background rotation');
-    pause.textContent = paused ? '▷' : 'Ⅱ';
+    pause.innerHTML = `<svg${paused ? ' class="fill-icon"' : ''}><use href="${paused ? '#i-play' : '#i-pause'}"/></svg>`;
   }
   function select(next) {
     index = next;
