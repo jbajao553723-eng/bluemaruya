@@ -4,11 +4,12 @@ A private movie and series website with three member profiles, a shared charcoal
 
 ## Run locally
 
-Run `npm ci`, then `npm start`, and open http://127.0.0.1:4173. The vanilla frontend in `dist/` has no build step. Local account changes use ignored `.local-members/` records. Production seed hashes remain unchanged.
+Run `npm ci`, then `npm run build`, then `npm start`, and open http://127.0.0.1:4173. Tailwind compiles from `src/tailwind.css` into `dist/tailwind.css`; the app’s cinematic component styles remain in `dist/`. Local account changes use ignored `.local-members/` records. Production seed hashes remain unchanged.
 
 ## Cinematic redesign
 
 - One responsive theme for Waken, Kristine and Guest, based on the approved Cinematic streaming mockup.
+- A brief, skippable B aperture intro and a dedicated “Who’s watching?” profile chooser with original profile icons.
 - Compact rotating spotlight, portrait shelves, accessible playback actions and Surprise me.
 - Continue watching directly below the spotlight when the profile has unfinished progress; no fabricated activity for new profiles.
 - Larger login fields, three equal profile choices, show-password control, Caps Lock hint and username-only remembering.
@@ -55,9 +56,9 @@ Discovery tests mock upstream responses to verify protected endpoints, actor sea
 
 ## Deploy to the existing Vercel project
 
-Use the repository root, Framework Preset **Other**, install command `npm ci`, no build command, and output directory `dist`. `vercel.json` supplies configuration and service-worker/manifest headers. Preserve existing environment variables and private Blob storage. Static-only hosting cannot run the required login/catalog functions.
+Use the repository root, Framework Preset **Other**, install command `npm ci`, build command `npm run build`, and output directory `dist`. `vercel.json` supplies configuration and service-worker/manifest headers. Preserve existing environment variables and private Blob storage. Static-only hosting cannot run the required login/catalog functions.
 
-This source update does not itself push to GitHub or deploy to Vercel. Validate live TMDB responses and iPhone installation on the deployed HTTPS origin.
+After deployment, validate live TMDB responses and iPhone installation on the HTTPS origin.
 
 ## Artwork
 

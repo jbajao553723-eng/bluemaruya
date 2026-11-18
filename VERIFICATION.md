@@ -10,6 +10,8 @@
 - Edge at 1440px desktop and 390px mobile: sign-in, actor directory/search, cast navigation, filmography filtering, TV-only genre routing, watchlist save and profile separation.
 - Browser exposed the native PWA install action; installation was not performed on the user’s device.
 - No browser console errors during checked flows.
+- Tailwind production build and interface contract: no Bootstrap assets or toggles, compiled Tailwind output, skippable B intro, three profile choices, reduced-motion fallback and accessible custom account menu.
+- Responsive entrance flow at 1280px desktop and 390px mobile: intro, profile picker, password handoff and authenticated dashboard. Both checked widths had no horizontal overflow.
 
 ## Visual review
 
@@ -19,4 +21,4 @@ Automated Impeccable pixel-fidelity phases were not completed. The reference use
 
 ## Environment limits
 
-Live TMDB/Blob credentials were unavailable. UI tests used an isolated local server with explicit catalog/account fixtures outside the repository, excluded from delivery. Actual iPhone installation, production TMDB responses and third-party stream playback require the deployed environment. No GitHub push or production deployment was performed.
+Local UI tests used an isolated server with explicit catalog/account fixtures outside the repository, excluded from delivery. Actual iPhone installation and third-party stream playback still require checks on the deployed device and provider.

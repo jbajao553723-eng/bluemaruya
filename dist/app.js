@@ -148,7 +148,7 @@ function render(){
   $('.genre-chips').hidden=peopleMode;
   $('#continueShelf').replaceChildren(); $('#continueShelf').hidden=true;
   $('#memberDashboardIntro').hidden=true;
-  $('#wakenDashboardIntro').hidden=true;
+  $('#wakenDashboardIntro').hidden=!homeMode;
   $('#sortWrap').hidden=homeMode||peopleMode;
   $('#home').hidden=!homeMode;$('#browse').style.marginTop=homeMode?'':'110px';
   $('#shelves').replaceChildren();$('#catalogGrid').replaceChildren();
@@ -176,7 +176,7 @@ function render(){
   $('#catalogStatus').hidden=!state.loading;$('#catalogStatusText').textContent=state.loading?'Finding your next favorite…':'';
   $('#loadMore').hidden=homeMode||['saved','recent'].includes(state.view)||state.loading||state.page>=state.totalPages;
   updateSaveButtons();
-  $('#dashboardDock').hidden=true;
+  $('#dashboardDock').hidden=!homeMode;
   const unfinished=state.recent.find(movie=>movie.time>15&&!movie.completed);$('#resumeLatest').disabled=!unfinished;$('#resumeLatestLabel').textContent=unfinished?`Resume ${unfinished.title}`:'Your next story starts here';
   window.cinema.observe();
 }

@@ -1,0 +1,12 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const html = fs.readFileSync('dist/index.html', 'utf8');
+const entrance = fs.readFileSync('dist/entrance.js', 'utf8');
+const styles = fs.readFileSync('dist/entrance.css', 'utf8');
+assert(!/bootstrap(?:\.bundle)?(?:\.min)?\.(?:css|js)/i.test(html), 'Bootstrap assets must be removed');
+assert(html.includes('tailwind.css'), 'Compiled Tailwind CSS must be loaded');
+assert(html.includes('id="brandIntro"') && html.includes('id="skipIntro"'), 'Skippable B intro must exist');
+assert.equal((html.match(/data-profile-target=/g) || []).length, 3, 'All three profile choices must exist');
+assert(entrance.includes("prefers-reduced-motion: reduce") && styles.includes('@media(prefers-reduced-motion:reduce)'), 'Intro must respect reduced motion');
+assert(html.includes('aria-controls="memberMenu"') && !html.includes('data-bs-toggle'), 'Account menu must not depend on Bootstrap');
+console.log('PASS interface: Tailwind migration, skippable B intro, three profile icons, custom account menu and reduced motion.');

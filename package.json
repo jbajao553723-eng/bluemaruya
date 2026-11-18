@@ -3,13 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "build": "tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css --minify",
     "start": "node scripts/serve.mjs",
-    "test": "node scripts/test-auth.cjs && node scripts/test-preferences.cjs && node scripts/test-history.cjs && node scripts/test-player.cjs && node scripts/test-discovery.cjs && node scripts/test-install.cjs",
+    "test": "node scripts/test-auth.cjs && node scripts/test-preferences.cjs && node scripts/test-history.cjs && node scripts/test-player.cjs && node scripts/test-discovery.cjs && node scripts/test-install.cjs && node scripts/test-interface.cjs",
     "test:preferences": "node scripts/test-preferences.cjs",
     "test:discovery": "node scripts/test-discovery.cjs",
-    "test:install": "node scripts/test-install.cjs"
+    "test:install": "node scripts/test-install.cjs",
+    "test:interface": "node scripts/test-interface.cjs"
   },
   "dependencies": {
     "@vercel/blob": "2.8.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  },
+  "overrides": {
+    "undici": "6.29.1",
+    "zod": "4.6.6"
   }
 }

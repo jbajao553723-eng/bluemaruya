@@ -187,7 +187,7 @@ Poster cards use real portrait artwork, the artwork radius, an adjacent title an
 
 ### Profile Choices
 
-Three equal-width options select Waken, Kristine, or Guest. Selected profiles use a warm tinted surface and coral avatar; the surrounding theme does not change. The choices share the control radius and remain side by side on phones.
+The opening uses a brief, skippable B aperture sequence, then yields to a dedicated “Who’s watching?” surface. Three equal-width original face icons select Waken, Kristine, or Guest. The choices remain side by side on phones and lead to a password-focused sign-in state with a clear route back to all profiles. The surrounding theme does not change between profiles.
 
 ## Do's and Don'ts
 

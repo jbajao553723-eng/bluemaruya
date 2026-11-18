@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -12,7 +12,7 @@
   <link rel="dns-prefetch" href="https://cinesrc.st">
   <link rel="icon" href="assets/brand.svg" type="image/svg+xml">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="tailwind.css?v=1">
   <link rel="stylesheet" href="styles.css?v=cinema4">
   <link rel="stylesheet" href="red.css?v=members1">
   <link rel="stylesheet" href="studio.css?v=studio1">
@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="cinema-plus.css?v=plus1">
   <link rel="stylesheet" href="refresh.css?v=refresh1">
   <link rel="stylesheet" href="dashboard-v2.css?v=dashboard2">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+  <script src="entrance.js?v=1" defer></script>
   <script src="experience.js?v=cinematic1" defer></script>
   <script src="member-preferences.js?v=dashboard2" defer></script>
   <script src="auth.js?v=cinematic1" defer></script>
@@ -30,6 +30,7 @@
   <script src="player-kit.js?v=refresh1" defer></script>
   <script src="app.js?v=cinematic1" defer></script>
   <link rel="stylesheet" href="cinematic.css?v=1">
+  <link rel="stylesheet" href="entrance.css?v=1">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/assets/app-icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,7 +38,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="install.js?v=1" defer></script>
 </head>
-<body class="cinematic">
+<body class="cinematic" data-auth-state="checking">
   <svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol>
@@ -55,6 +56,23 @@
     <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 3 2 2v3l2 2 3-1 2 3h3l1-3 3-1 2-3-2-2V8l-2-2-3 1-2-4Z"/><circle cx="12" cy="11" r="3"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol></defs></svg>
+  <div class="brand-intro fixed inset-0 z-[1000] grid min-h-dvh place-items-center bg-cinema-950" id="brandIntro" role="dialog" aria-modal="true" aria-label="blue maruya opening">
+    <button class="intro-skip" id="skipIntro" type="button">Skip intro</button>
+    <div class="brand-intro-stage" aria-hidden="true"><span class="brand-aperture"></span><strong>B</strong><p>blue maruya</p></div>
+  </div>
+  <section class="profile-gate fixed inset-0 z-[900] min-h-dvh bg-cinema-950 text-cinema-cream" id="profileGate" aria-labelledby="profileGateTitle" hidden>
+    <header class="profile-gate-header"><a class="wordmark" href="/" aria-label="blue maruya home"><img src="assets/brand.svg" alt="">blue <span>maruya</span></a><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button></header>
+    <div class="profile-gate-content mx-auto flex min-h-[calc(100dvh-148px)] w-full max-w-5xl flex-col items-center justify-center px-5 py-10 text-center">
+      <h1 id="profileGateTitle">Who’s watching?</h1><p>Choose your profile to enter your private cinema.</p>
+      <div class="profile-choice-grid mt-10 grid w-full grid-cols-3 gap-3 sm:gap-7" role="group" aria-label="Choose your cinema profile">
+        <button class="profile-choice" type="button" data-profile-target="wakengwapo"><span class="profile-art profile-art-waken"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M0 0h120v120H0z" fill="#366fe8"/><circle cx="38" cy="46" r="6" fill="#fff"/><circle cx="82" cy="46" r="6" fill="#fff"/><path d="M34 74c15 14 37 14 52 0" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg></span><strong>Waken</strong><small>Screening room</small></button>
+        <button class="profile-choice" type="button" data-profile-target="kdumangas"><span class="profile-art profile-art-kristine"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M0 0h120v120H0z" fill="#e15f72"/><path d="M20 34c14-18 66-18 80 0v50c-10 17-26 26-40 26S30 101 20 84Z" fill="#ffd4ca"/><path d="M29 49h23M68 49h23" stroke="#47292e" stroke-width="8" stroke-linecap="round"/><path d="M43 77c10 8 24 8 34 0" fill="none" stroke="#c64b62" stroke-width="6" stroke-linecap="round"/><path d="M12 0h96L88 26H32Z" fill="#8c263d"/></svg></span><strong>Kristine</strong><small>Cozy corner</small></button>
+        <button class="profile-choice" type="button" data-profile-target="guest"><span class="profile-art profile-art-guest"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M0 0h120v120H0z" fill="#512d91"/><path d="M0 0h56L0 76z" fill="#1db27a"/><path d="M120 0H62l58 74z" fill="#2385c7"/><circle cx="42" cy="54" r="5" fill="#fff"/><circle cx="78" cy="54" r="5" fill="#fff"/><path d="M42 79h36" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg></span><strong>Guest</strong><small>Open screening</small></button>
+      </div>
+      <p class="profile-help">Profile names and passwords can be managed after signing in.</p>
+    </div>
+    <footer class="profile-gate-footer"><span>© <span class="current-year">2026</span> blue maruya</span><span>Your own pace. Your own screen.</span></footer>
+  </section>
   <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
     <header class="login-header"><a class="wordmark" href="/" aria-label="blue maruya home"><img src="assets/brand.svg" alt="">blue <span>maruya</span><b>.</b></a><span class="login-header-caption">A PRIVATE CINEMA CLUB</span><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button></header>
     <div class="login-layout">
@@ -67,14 +85,16 @@
       </div>
       <div class="login-entry"><div class="login-card">
         <div class="login-card-top"><span class="entry-section-number">01 / SIGN IN</span><span class="entry-symbol"><svg><use href="#i-play"/></svg></span></div>
-        <h2 id="loginTitle">Welcome back.</h2><p class="login-intro">Choose your profile. Your next story is waiting.</p>
+        <button class="back-to-profiles" id="backToProfiles" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>All profiles</button>
+        <div class="selected-profile" id="selectedProfile"><span class="profile-avatar selected-profile-avatar" id="loginSelectedAvatar"></span><span><small>SIGNING IN AS</small><strong id="loginSelectedName">Waken</strong></span></div>
+        <h2 id="loginTitle">Welcome back.</h2><p class="login-intro">Enter your password to continue your movie night.</p>
         <div class="login-member-switch" role="group" aria-label="Choose your cinema profile"><button type="button" data-login-member="wakengwapo" aria-pressed="false"><span class="login-member-avatar">W</span><span><strong>Waken</strong><small>THE SCREENING ROOM</small></span><b>↗</b></button><button type="button" data-login-member="kdumangas" aria-pressed="false"><span class="login-member-avatar pink">K</span><span><strong>Kristine</strong><small>THE COZY CORNER</small></span><b>↗</b></button><button type="button" data-login-member="guest" aria-pressed="false"><span class="login-member-avatar guest">G</span><span><strong>Guest</strong><small>OPEN SCREENING ROOM</small></span><b>↗</b></button></div>
         <form id="loginForm" aria-describedby="loginMessage">
-          <div class="login-field"><label class="form-label" for="username">Username</label><div class="login-input-wrap"><svg><use href="#i-user"/></svg><input class="form-control" id="username" name="username" type="text" placeholder="Enter your username" autocomplete="username" required maxlength="80" autocapitalize="none" spellcheck="false"></div></div>
+          <div class="login-field login-username-field"><label class="form-label" for="username">Username</label><div class="login-input-wrap"><svg><use href="#i-user"/></svg><input class="form-control" id="username" name="username" type="text" placeholder="Enter your username" autocomplete="username" required maxlength="80" autocapitalize="none" spellcheck="false"></div></div>
           <div class="login-field"><label class="form-label" for="password">Password</label><div class="login-input-wrap password-field"><svg><use href="#i-shield"/></svg><input class="form-control" id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required maxlength="256"><button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" aria-pressed="false"><svg><use href="#i-eye"/></svg></button></div></div>
           <div class="login-options"><label><input type="checkbox" id="rememberUsername"> Remember my username</label><span id="capsLockHint" hidden>Caps Lock is on</span></div>
           <p class="login-message" id="loginMessage" role="status" aria-live="polite">Checking your session…</p>
-          <button class="button button-primary w-100" id="loginSubmit" type="submit" disabled><span>Sign in</span><svg><use href="#i-arrow"/></svg></button>
+          <button class="button button-primary w-full" id="loginSubmit" type="submit" disabled><span>Sign in</span><svg><use href="#i-arrow"/></svg></button>
         </form>
         <div class="entry-divider"><span></span><svg><use href="#i-film"/></svg><span></span></div><p class="entry-footnote">Need your password? Ask Waken for access.</p>
       </div><div class="entry-bottom"><span>MOVIES</span><span>SERIES</span><span>YOUR OWN PACE</span></div></div>
@@ -97,7 +117,7 @@
         <div class="search-area"><button class="search-toggle icon-button" id="searchToggle" aria-label="Search titles" aria-expanded="false" aria-controls="searchForm"><svg><use href="#i-search"/></svg></button>
           <form class="search-form" id="searchForm" role="search"><svg><use href="#i-search"/></svg><input id="searchInput" type="search" placeholder="Find a movie or series" aria-label="Search movies and series" autocomplete="off"></form>
         </div>
-        <div class="dropdown"><button class="profile-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu"><span class="profile-avatar" id="memberAvatar">W</span><svg class="profile-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><ul class="dropdown-menu dropdown-menu-end member-menu"><li class="member-name"><small>YOUR CINEMA PROFILE</small><strong id="memberName">Member</strong><span id="memberUsername"></span></li><li><hr class="dropdown-divider"></li><li><button class="dropdown-item" id="settingsButton"><svg><use href="#i-settings"/></svg> Settings</button></li><li><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button></li><li><button class="dropdown-item" id="logoutButton"><svg><use href="#i-logout"/></svg> Sign out</button></li></ul></div>
+        <div class="profile-menu-wrap"><button class="profile-button" id="profileMenuButton" type="button" aria-expanded="false" aria-controls="memberMenu" aria-label="Account menu"><span class="profile-avatar" id="memberAvatar"></span><svg class="profile-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><ul class="member-menu" id="memberMenu" hidden><li class="member-name"><small>YOUR CINEMA PROFILE</small><strong id="memberName">Member</strong><span id="memberUsername"></span></li><li><hr class="menu-divider"></li><li><button class="menu-item" id="settingsButton"><svg><use href="#i-settings"/></svg> Settings</button></li><li><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button></li><li><button class="menu-item" id="logoutButton"><svg><use href="#i-logout"/></svg> Sign out</button></li></ul></div>
       </div>
     </header>
     <section class="waken-dashboard-intro dashboard-welcome-card" id="wakenDashboardIntro" aria-labelledby="wakenGreeting" hidden>
@@ -128,7 +148,7 @@
       <div class="genre-chips" aria-label="Quick genre filters"><button class="chip active" data-genre="all" aria-pressed="true">All genres</button><button class="chip" data-genre="Action" aria-pressed="false">Action</button><button class="chip" data-genre="Adventure" aria-pressed="false">Adventure</button><button class="chip" data-genre="Animation" aria-pressed="false">Animation</button><button class="chip" data-genre="Comedy" aria-pressed="false">Comedy</button><button class="chip" data-genre="Documentary" aria-pressed="false">Documentary</button><button class="chip" data-genre="Drama" aria-pressed="false">Drama</button><button class="chip" data-genre="Romance" aria-pressed="false">Romance</button><button class="chip" data-genre="Thriller" aria-pressed="false">Thriller</button><button class="chip" data-genre="Sci-Fi" aria-pressed="false">Sci-Fi</button></div>
       <div class="collection-sort" id="sortWrap" hidden><label for="sortSelect">Sort loaded titles</label><select id="sortSelect" class="form-select"><option value="default">Default order</option><option value="title">Title A–Z</option><option value="year">Newest release</option><option value="rating">Top rated</option></select><span id="collectionCount" aria-live="polite"></span></div>
       <div id="shelves"></div><p class="catalog-error" id="catalogError" role="status" hidden><span id="catalogErrorText"></span> <button id="retryCatalog" class="button button-secondary">Try again</button></p><div class="actor-grid" id="actorGrid" hidden></div>
-      <div class="catalog-grid row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4" id="catalogGrid"></div>
+      <div class="catalog-grid grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-6 lg:grid-cols-5 xl:grid-cols-6" id="catalogGrid"></div>
       <div class="catalog-status" id="catalogStatus" role="status" aria-live="polite" hidden><span class="spinner"></span><span id="catalogStatusText">Finding your next favorite…</span></div>
       <div class="load-more-wrap"><button class="button button-secondary" id="loadMore" hidden>More stories <svg><use href="#i-arrow"/></svg></button></div>
       <section class="empty-state" id="empty" hidden><svg><use href="#i-film"/></svg><h3 id="emptyTitle">No matches just yet.</h3><p id="emptyText">Try a different title or explore another genre.</p><button class="button button-secondary" id="resetFilters">Explore all titles</button></section>

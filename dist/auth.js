@@ -16,9 +16,13 @@
   const rememberUsername = document.querySelector('#rememberUsername');
   const profileChoices = [...document.querySelectorAll('[data-login-member]')];
   const allowedMembers = ['wakengwapo', 'kdumangas', 'guest'];
+  const profileNames = { wakengwapo: 'Waken', kdumangas: 'Kristine', guest: 'Guest' };
   function selectProfile(username) {
     profileChoices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.loginMember === username)));
     document.body.dataset.loginMember = username === 'kdumangas' ? 'kristine' : username === 'guest' ? 'guest' : 'waken';
+    const selectedAvatar = document.querySelector('#loginSelectedAvatar');
+    selectedAvatar.dataset.avatar = username;
+    document.querySelector('#loginSelectedName').textContent = profileNames[username] || username;
   }
   try { const saved = localStorage.getItem('blue-maruya-login-username'); if (allowedMembers.includes(saved)) { form.username.value = saved; rememberUsername.checked = true; selectProfile(saved); } } catch {}
   profileChoices.forEach(button => button.addEventListener('click', () => { form.username.value = button.dataset.loginMember; selectProfile(form.username.value); password.focus(); }));
@@ -36,7 +40,6 @@
     const prefs = window.memberPreferencesStore.read(member.username);
     document.body.dataset.motion = prefs.motion ? 'on' : 'off';
     delete document.body.dataset.kristineMode;
-    document.documentElement.dataset.bsTheme = 'dark';
     document.querySelector('meta[name="theme-color"]').content = '#111113';
     window.cinema.setMotion(prefs.motion);
   }
@@ -72,8 +75,10 @@
     document.querySelector('#memberName').textContent = member.displayName;
     document.querySelector('#memberUsername').textContent = '@' + member.username;
     document.querySelector('#memberWelcome').textContent = 'Welcome, ' + member.displayName;
-    document.querySelector('#memberAvatar').textContent = member.displayName.slice(0, 1).toUpperCase();
-    document.querySelector('#settingsAvatar').textContent = member.displayName.slice(0, 1).toUpperCase();
+    document.querySelector('#memberAvatar').textContent = '';
+    document.querySelector('#memberAvatar').dataset.avatar = member.username;
+    document.querySelector('#settingsAvatar').textContent = '';
+    document.querySelector('#settingsAvatar').dataset.avatar = member.username;
     document.querySelector('#settingsMemberName').textContent = member.displayName;
     document.querySelector('#settingsUsername').textContent = '@' + member.username;
     applyPreferences();
@@ -99,7 +104,6 @@
     delete document.body.dataset.kristineMode;
     delete document.body.dataset.motion;
     window.cinema.setMotion(true);
-    document.documentElement.dataset.bsTheme = 'dark';
     document.querySelector('meta[name="theme-color"]').content = '#111113';
     document.querySelector('#memberDashboardIntro').hidden = true;
     document.querySelector('#wakenDashboardIntro').hidden = true;
@@ -114,6 +118,8 @@
     password.type = 'password'; document.querySelector('#passwordToggle').setAttribute('aria-pressed','false'); document.querySelector('#passwordToggle').setAttribute('aria-label','Show password');
     submit.disabled = false;
     setMessage(text, Boolean(text));
+    document.body.dataset.authState = 'signed-out';
+    window.dispatchEvent(new CustomEvent('auth:state', { detail: { authenticated: false } }));
     if (wasSignedIn) window.scrollTo({top:0,behavior:'instant'});
     if (wasSignedIn) window.dispatchEvent(new Event('member:signed-out'));
   }
@@ -126,6 +132,8 @@
     setMessage('');
     window.scrollTo({ top: 0 });
     window.dispatchEvent(new Event('member:signed-in'));
+    document.body.dataset.authState = 'signed-in';
+    window.dispatchEvent(new CustomEvent('auth:state', { detail: { authenticated: true, member } }));
     toast('Welcome, ' + member.displayName);
   }
   async function checkSession() {
@@ -185,7 +193,7 @@
     try {
       const response = await authFetch({ method: 'DELETE' });
       if (!response.ok) throw new Error();
-      window.bootstrap?.Dropdown.getInstance(document.querySelector('.profile-button'))?.hide();
+      window.profileMenu?.close();
       showLogin();
     } catch {
       document.querySelector('#toast').textContent = 'Could not sign out. Please try again.';
@@ -198,7 +206,7 @@
   }
   function closeSettings() { settings.close(); changePasswordForm.reset(); document.body.classList.remove('dialog-open'); }
   document.querySelector('#settingsButton').addEventListener('click', async () => {
-    window.bootstrap?.Dropdown.getInstance(document.querySelector('.profile-button'))?.hide();
+    window.profileMenu?.close();
     await checkSession();
     if (!signedIn) return;
     profileForm.displayName.value = member.displayName;
