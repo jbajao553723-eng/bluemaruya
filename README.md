@@ -9,7 +9,7 @@ Run `npm ci`, then `npm run build`, then `npm start`, and open http://127.0.0.1:
 ## Cinematic redesign
 
 - One responsive theme for Waken, Kristine and Guest, based on the approved Cinematic streaming mockup.
-- A brief, skippable B aperture intro and a dedicated “Who’s watching?” profile chooser with original profile icons.
+- A brief, skippable B aperture intro and a dedicated “Who’s watching?” profile chooser with Gojo artwork for Waken, Rapunzel artwork for Kristine and an original Guest icon.
 - Compact rotating spotlight, portrait shelves, accessible playback actions and Surprise me.
 - Continue watching directly below the spotlight when the profile has unfinished progress; no fabricated activity for new profiles.
 - Larger login fields, three equal profile choices, show-password control, Caps Lock hint and username-only remembering.

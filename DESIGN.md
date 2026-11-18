@@ -187,7 +187,7 @@ Poster cards use real portrait artwork, the artwork radius, an adjacent title an
 
 ### Profile Choices
 
-The opening uses a brief, skippable B aperture sequence, then yields to a dedicated “Who’s watching?” surface. Three equal-width original face icons select Waken, Kristine, or Guest. The choices remain side by side on phones and lead to a password-focused sign-in state with a clear route back to all profiles. The surrounding theme does not change between profiles.
+The opening uses a brief, skippable B aperture sequence, then yields to a dedicated “Who’s watching?” surface. Three equal-width icons select Waken, Kristine, or Guest: user-supplied Gojo artwork identifies Waken, user-supplied Rapunzel artwork identifies Kristine, and Guest retains the geometric face. The choices remain side by side on phones and lead to a password-focused sign-in state with a clear route back to all profiles. The surrounding theme does not change between profiles.
 
 ## Do's and Don'ts
 

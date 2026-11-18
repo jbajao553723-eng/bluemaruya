@@ -7,6 +7,8 @@ assert(!/bootstrap(?:\.bundle)?(?:\.min)?\.(?:css|js)/i.test(html), 'Bootstrap a
 assert(html.includes('tailwind.css'), 'Compiled Tailwind CSS must be loaded');
 assert(html.includes('id="brandIntro"') && html.includes('id="skipIntro"'), 'Skippable B intro must exist');
 assert.equal((html.match(/data-profile-target=/g) || []).length, 3, 'All three profile choices must exist');
+assert(html.includes('assets/profile-gojo.jpg') && html.includes('assets/profile-rapunzel.jpg'), 'Waken and Kristine profile artwork must be present');
+assert(fs.statSync('dist/assets/profile-gojo.jpg').size > 1000 && fs.statSync('dist/assets/profile-rapunzel.jpg').size > 1000, 'Profile artwork files must not be empty');
 assert(entrance.includes("prefers-reduced-motion: reduce") && styles.includes('@media(prefers-reduced-motion:reduce)'), 'Intro must respect reduced motion');
 assert(html.includes('aria-controls="memberMenu"') && !html.includes('data-bs-toggle'), 'Account menu must not depend on Bootstrap');
-console.log('PASS interface: Tailwind migration, skippable B intro, three profile icons, custom account menu and reduced motion.');
+console.log('PASS interface: Tailwind migration, skippable B intro, supplied Waken/Kristine artwork, custom account menu and reduced motion.');

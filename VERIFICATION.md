@@ -12,6 +12,7 @@
 - No browser console errors during checked flows.
 - Tailwind production build and interface contract: no Bootstrap assets or toggles, compiled Tailwind output, skippable B intro, three profile choices, reduced-motion fallback and accessible custom account menu.
 - Responsive entrance flow at 1280px desktop and 390px mobile: intro, profile picker, password handoff and authenticated dashboard. Both checked widths had no horizontal overflow.
+- User-supplied Gojo and Rapunzel profile artwork loaded at intrinsic resolution, kept square crops at desktop and mobile sizes, and carried into the password handoff avatars without console errors.
 
 ## Visual review
 
