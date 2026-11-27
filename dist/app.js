@@ -56,9 +56,14 @@ function updateSaveButtons(){
   if(state.selected){const selectedSaved=state.saved.has(keyFor(state.selected));$('#detailSave').textContent=selectedSaved?'✓ In my list':'Add to my list';$('#detailSave').setAttribute('aria-pressed',selectedSaved);}
 }
 
-function createCard(movie,{recent=false}={}){
-  const article=document.createElement('article');article.className='movie-card';
-  article.innerHTML=`<button class="poster-button" aria-label="Details for ${escapeHtml(movie.title)}"><img src="${escapeHtml(assetUrl(movie.image))}" alt="${escapeHtml(movie.title)} poster" loading="lazy" width="300" height="450"><span class="media-badge">${movie.type==='tv'?'SERIES':'MOVIE'}</span><span class="poster-play">${icons.play}</span></button><div class="card-bottom"><div><button class="card-title">${escapeHtml(movie.title)}</button><p class="card-meta">${escapeHtml(movie.year||'Coming soon')} <span aria-hidden="true">·</span> ${escapeHtml(movie.genres?.[0]||'Featured')}</p></div><button class="card-save" aria-label="${state.saved.has(keyFor(movie))?'Remove':'Add'} ${escapeHtml(movie.title)} ${state.saved.has(keyFor(movie))?'from':'to'} my list" aria-pressed="${state.saved.has(keyFor(movie))}">${state.saved.has(keyFor(movie))?icons.check:icons.plus}</button></div>`;
+function createCard(movie,{recent=false,landscape=false,top10=false}={}){
+  const wide=landscape||recent;
+  const article=document.createElement('article');
+  article.className=`movie-card ${wide?'landscape-card':'poster-card'}${wide&&!movie.backdrop?' no-backdrop':''}`;
+  const art=wide?assetUrl(movie.backdrop||movie.image):assetUrl(movie.image);
+  const genres=(movie.genres||[]).slice(0,3).map(escapeHtml).join(' <span aria-hidden="true">•</span> ');
+  const saved=state.saved.has(keyFor(movie));
+  article.innerHTML=`<button class="poster-button" aria-label="Details for ${escapeHtml(movie.title)}"><img src="${escapeHtml(art)}" alt="${escapeHtml(movie.title)} poster" loading="lazy" width="${wide?480:300}" height="${wide?270:450}"><span class="media-badge">${movie.type==='tv'?'SERIES':'MOVIE'}</span>${wide?`<span class="card-art-title">${escapeHtml(movie.title)}</span>`:''}${top10?'<span class="top10-badge" aria-hidden="true"><small>TOP</small>10</span>':''}<span class="poster-play">${icons.play}</span></button><div class="card-bottom"><div class="card-text"><button class="card-title">${escapeHtml(movie.title)}</button><p class="card-meta">${escapeHtml(movie.year||'Coming soon')} <span aria-hidden="true">·</span> ${escapeHtml(movie.rating||movie.runtime||(movie.type==='tv'?'Series':'Movie'))}</p>${genres?`<p class="card-genres">${genres}</p>`:''}</div><button class="card-save" aria-label="${saved?'Remove':'Add'} ${escapeHtml(movie.title)} ${saved?'from':'to'} my list" aria-pressed="${saved}">${saved?icons.check:icons.plus}</button></div>`;
   article.querySelector('.poster-button').onclick=()=>openDetails(movie);
   const image=article.querySelector('img');
   image.addEventListener('error',()=>{if(!image.dataset.fallback){image.dataset.fallback='true';image.src='assets/noir-hero.png';}});
@@ -68,7 +73,8 @@ function createCard(movie,{recent=false}={}){
   article.querySelector('.card-save').onclick=()=>toggleSave(movie);
   const quickPlay=document.createElement('button');quickPlay.className='card-quick-play';quickPlay.innerHTML=icons.play;
   quickPlay.setAttribute('aria-label',`${recent&&movie.type==='tv'?'Resume':'Play'} ${movie.title}${recent&&movie.type==='tv'?` season ${movie.season}, episode ${movie.episode}`:''}`);
-  quickPlay.onclick=()=>openPlayer(movie,recent?movie:null);article.append(quickPlay);
+  quickPlay.onclick=()=>openPlayer(movie,recent?movie:null);
+  article.querySelector('.card-bottom').append(quickPlay);
   if(recent){
     article.classList.add('recent-card');image.src=assetUrl(movie.backdrop||movie.image);
     const meta=article.querySelector('.card-meta');meta.textContent=(movie.type==='tv'?`S${movie.season} · E${movie.episode}`:`${movie.year||'Movie'}`)+(movie.time>15&&!movie.completed?` · Resume ${timeLabel(movie.time)}`:' · Play again');
@@ -83,19 +89,21 @@ function timeLabel(time){const seconds=Math.floor(time||0);return `${Math.floor(
 function createShelf(title,subtitle,movies,ranked=false,options={}){
   if(!movies?.length)return;
   const section=document.createElement('section');section.className=`shelf${ranked?' ranked':''}`;
-  section.innerHTML=`<div class="shelf-heading"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div><div class="rail-controls"><button class="icon-button" aria-label="Previous titles in ${escapeHtml(title)}">${icons.left}</button><button class="icon-button" aria-label="Next titles in ${escapeHtml(title)}">${icons.right}</button></div></div><div class="rail"></div>`;
+  section.innerHTML=`<div class="shelf-heading"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div></div><div class="rail-wrap"><button class="rail-arrow prev" aria-label="Previous titles in ${escapeHtml(title)}">${icons.left}</button><div class="rail"></div><button class="rail-arrow next" aria-label="Next titles in ${escapeHtml(title)}">${icons.right}</button></div>`;
   const rail=section.querySelector('.rail');
-  movies.forEach((movie,index)=>{const card=createCard(movie,options);if(ranked){const wrap=document.createElement('div');wrap.className='rank-card';const rank=document.createElement('span');rank.className='rank-number';rank.setAttribute('aria-hidden','true');rank.textContent=String(index+1);wrap.append(rank,card);rail.append(wrap);}else rail.append(card);});
-  const[left,right]=section.querySelectorAll('.rail-controls button');
-  left.onclick=()=>rail.scrollBy({left:-rail.clientWidth*.8,behavior:'smooth'});right.onclick=()=>rail.scrollBy({left:rail.clientWidth*.8,behavior:'smooth'});
+  const top10Set=options.top10Keys||new Set();
+  movies.forEach((movie,index)=>{const card=createCard(movie,{...options,landscape:ranked?false:options.landscape,top10:!ranked&&top10Set.has(keyFor(movie))});if(ranked){const wrap=document.createElement('div');wrap.className='rank-card';const rank=document.createElement('span');rank.className='rank-number';rank.setAttribute('aria-hidden','true');rank.textContent=String(index+1);wrap.append(rank,card);rail.append(wrap);}else rail.append(card);});
+  const left=section.querySelector('.rail-arrow.prev');
+  const right=section.querySelector('.rail-arrow.next');
+  left.onclick=()=>rail.scrollBy({left:-rail.clientWidth*.85,behavior:'smooth'});right.onclick=()=>rail.scrollBy({left:rail.clientWidth*.85,behavior:'smooth'});
   function controls(){left.disabled=rail.scrollLeft<2;right.disabled=rail.scrollLeft+rail.clientWidth>=rail.scrollWidth-3;}
   rail.addEventListener('scroll',controls,{passive:true});$('#shelves').append(section);requestAnimationFrame(controls);
   return section;
 }
 function createRecentShelf(){
-  if(state.recent.length){const section=createShelf('Recently watched','Your latest picks on this device. Jump back into a movie or your last episode.',state.recent,false,{recent:true});section.classList.add('recent-shelf');}
+  if(state.recent.length){const section=createShelf('Recently Watched','Your latest picks on this device. Jump back into a movie or your last episode.',state.recent,false,{recent:true,landscape:true});section.classList.add('recent-shelf');}
   else{
-    const section=document.createElement('section');section.className='recent-empty';section.innerHTML='<span class="recent-empty-icon"><svg><use href="#i-clock"/></svg></span><div><h2>Recently watched</h2><p>Your movie nights will appear here. History is private to your account on this device.</p></div><button class="button button-secondary">Find a movie <svg><use href="#i-arrow"/></svg></button>';section.querySelector('button').onclick=()=>setView('movie');$('#shelves').append(section);
+    const section=document.createElement('section');section.className='recent-empty';section.innerHTML='<span class="recent-empty-icon"><svg><use href="#i-clock"/></svg></span><div><h2>Recently Watched</h2><p>Your movie nights will appear here. History is private to your account on this device.</p></div><button class="button button-secondary">Find a movie <svg><use href="#i-arrow"/></svg></button>';section.querySelector('button').onclick=()=>setView('movie');$('#shelves').append(section);
   }
 }
 
@@ -113,9 +121,16 @@ function updateHero(movie){
   state.featured=movie;
   window.cinema.updateBackdrop(assetUrl(movie.backdrop||movie.image));
   const content=$('.hero-content');content.classList.toggle('long-title',movie.title.length>17);content.classList.toggle('very-long-title',movie.title.length>30);
+  const kindText=$('#heroKindText');if(kindText)kindText.textContent=movie.type==='tv'?'SERIES':'FILM';
   $('#heroTitleText').textContent=movie.title;
   const request=++state.logoRequest;$('#heroTitle').classList.remove('has-title-logo');$('#heroLogo').hidden=true;$('#heroLogo').removeAttribute('src');
-  // The shared design uses accessible text titles rather than remote title logos.
+  loadTitleLogo(movie,request);
+  const trendingList=state.home?.trending||fallbackCatalog;
+  const rankIndex=trendingList.findIndex(item=>keyFor(item)===keyFor(movie));
+  const heroRank=$('#heroRank');
+  if(heroRank){heroRank.hidden=rankIndex<0||rankIndex>=10;if(!heroRank.hidden)$('#heroRankText').textContent=`#${rankIndex+1} in ${movie.type==='tv'?'Series':'Movies'} Today`;}
+  const maturity=$('#heroMaturity');
+  if(maturity){maturity.textContent=movie.rating||'';maturity.hidden=!movie.rating;}
   $('.hero-meta').replaceChildren(...[movie.year,movie.rating,movie.runtime,movie.genres?.[0]].filter(Boolean).map((label,index)=>{const span=document.createElement('span');span.textContent=label;if(index===1)span.className='certificate';return span;}));
   $('.hero-description').textContent=movie.description;
   updateSaveButtons();
@@ -131,7 +146,7 @@ async function loadTitleLogo(movie,request){
 }
 function sortedItems(items){const sorted=[...items];if(state.sort==='title')sorted.sort((a,b)=>a.title.localeCompare(b.title));else if(state.sort==='year')sorted.sort((a,b)=>(b.year||0)-(a.year||0));else if(state.sort==='rating')sorted.sort((a,b)=>ratingScore(b)-ratingScore(a));return sorted;}
 function ratingScore(movie){return movie.rating?.startsWith('★')?Number.parseFloat(movie.rating.slice(1))||0:0;}
-function renderGrid(items){const grid=$('#catalogGrid');grid.classList.toggle('history-grid',state.view==='recent');grid.replaceChildren(...sortedItems(items).map(movie=>{const column=document.createElement('div');column.className='col';column.append(createCard(movie,{recent:state.view==='recent'}));return column;}));}
+function renderGrid(items){const grid=$('#catalogGrid');grid.classList.toggle('history-grid',state.view==='recent');grid.replaceChildren(...sortedItems(items).map(movie=>{const column=document.createElement('div');column.className='col';column.append(createCard(movie,{recent:state.view==='recent',landscape:true}));return column;}));}
 function matchesGenre(movie){if(state.genre==='all')return true;const aliases={'Sci-Fi':['Science Fiction','Sci-Fi','Sci-Fi & Fantasy'],'Action':['Action','Action & Adventure'],'Adventure':['Adventure','Action & Adventure'],'Fantasy':['Fantasy','Sci-Fi & Fantasy'],'War':['War','War & Politics']};return movie.genres?.some(genre=>(aliases[state.genre]||[state.genre]).includes(genre));}
 function filterSaved(){const query=state.query.toLowerCase().trim();return [...state.saved.values()].filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
 function filterRecent(){const query=state.query.toLowerCase().trim();return state.recent.filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
@@ -156,12 +171,19 @@ function render(){
   $('#collectionCount').textContent=`${items.length} ${items.length===1?'title':'titles'}`;
   if(homeMode){
     const home=state.home;
-    const unfinished=state.recent.filter(movie=>movie.time>15&&!movie.completed);if(unfinished.length){const shelf=createShelf('Continue watching','Right back to your saved moment.',unfinished,false,{recent:true});shelf.classList.add('recent-shelf');$('#continueShelf').append(shelf);$('#continueShelf').hidden=false;}
-    createShelf('Your next watch','Explore popular movies.',(home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie')).slice(0,10),false);
-    createShelf('Trending now','The movies and series everyone is talking about.',home?.trending||fallbackCatalog.slice(0,8));
+    const trending=home?.trending||fallbackCatalog.slice(0,10);
+    const moviesList=home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie');
+    const tvList=home?.tv||fallbackCatalog.filter(movie=>movie.type==='tv');
+    const top10Keys=new Set(trending.slice(0,10).map(keyFor));
+    const unfinished=state.recent.filter(movie=>movie.time>15&&!movie.completed);
+    if(unfinished.length){const shelf=createShelf('Continue Watching','Right back to your saved moment.',unfinished,false,{recent:true,landscape:true});shelf.classList.add('recent-shelf');$('#continueShelf').append(shelf);$('#continueShelf').hidden=false;}
+    createShelf('Trending Now','The movies and series everyone is talking about.',trending,false,{landscape:true,top10Keys});
+    if(state.saved.size)createShelf('My List','Your saved movies and series.',[...state.saved.values()],false,{landscape:true,top10Keys});
+    createShelf('Top 10 Today','Most-watched titles right now.',trending.slice(0,10),true);
+    createShelf('Popular Movies','Explore popular movies.',moviesList,false,{landscape:true,top10Keys});
     if(isKristine())createPreferences();
+    createShelf('Popular Series','Your next series obsession.',tvList,false,{landscape:true,top10Keys});
     createRecentShelf();
-    createShelf('Popular series','Your next series obsession.',home?.tv||fallbackCatalog.filter(movie=>movie.type==='tv'));
     $('#browseTitle').textContent=isKristine()?'A good story for every mood.':'Find something you’ll love.';
   }else{
     if(peopleMode)$('#actorGrid').replaceChildren(...items.map(createActorCard)); else renderGrid(items);
@@ -290,7 +312,7 @@ $('#searchForm').onsubmit=event=>event.preventDefault();
 $('#searchInput').oninput=event=>{state.query=event.target.value;if(state.view!=='actor'){state.items=[];++state.request;}clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(['saved','recent'].includes(state.view)){render();return;}if(!state.query.trim()&&state.view==='home')loadHome();else loadCollection();},350);};
 $('#sortSelect').onchange=event=>{state.sort=event.target.value;render();};
 function surpriseMovie(){const pool=[...(state.home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie')),...state.saved.values()].filter(movie=>movie.type==='movie');const unseen=pool.filter(movie=>!state.recent.some(entry=>keyFor(entry)===keyFor(movie)));const choices=unseen.length?unseen:pool;openDetails(choices[Math.floor(Math.random()*choices.length)]);}
-$('#surpriseButton').onclick=surpriseMovie;$('#dockSurprise').onclick=surpriseMovie;
+$('#surpriseButton').onclick=surpriseMovie;$('#dockSurprise').onclick=surpriseMovie;if($('#heroShuffle'))$('#heroShuffle').onclick=surpriseMovie;
 $('#resumeLatest').onclick=()=>{const movie=state.recent.find(item=>item.time>15&&!item.completed);if(movie)openPlayer(movie,movie);};
 $('#searchToggle').onclick=()=>{const open=$('#searchForm').classList.toggle('open');$('#searchToggle').setAttribute('aria-expanded',open);if(open)$('#searchInput').focus();};
 $('#resetFilters').onclick=()=>setView(state.view==='actors'?'actors':'home');$('#retryCatalog').onclick=()=>{if(state.view==='actor'&&state.person)openActor(state.person);else if(state.view==='home'&&!state.query.trim()&&state.genre==='all'){state.home=null;loadHome();}else loadCollection();};$('#loadMore').onclick=()=>loadCollection({append:true});

@@ -40,7 +40,7 @@
     const prefs = window.memberPreferencesStore.read(member.username);
     document.body.dataset.motion = prefs.motion ? 'on' : 'off';
     delete document.body.dataset.kristineMode;
-    document.querySelector('meta[name="theme-color"]').content = '#111113';
+    document.querySelector('meta[name="theme-color"]').content = '#141414';
     window.cinema.setMotion(prefs.motion);
   }
 
@@ -104,7 +104,7 @@
     delete document.body.dataset.kristineMode;
     delete document.body.dataset.motion;
     window.cinema.setMotion(true);
-    document.querySelector('meta[name="theme-color"]').content = '#111113';
+    document.querySelector('meta[name="theme-color"]').content = '#141414';
     document.querySelector('#memberDashboardIntro').hidden = true;
     document.querySelector('#wakenDashboardIntro').hidden = true;
     changePasswordForm.reset(); profileForm.reset();

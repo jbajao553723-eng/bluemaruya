@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111113">
+  <meta name="theme-color" content="#141414">
   <meta name="description" content="Your private movie night. Discover movies and series, explore stories, and save your next watch with blue maruya.">
   <title>blue maruya — Your next great escape</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,9 +28,10 @@
   <script src="preferences.js?v=pink1" defer></script>
   <script src="watch-history.js?v=dashboard2" defer></script>
   <script src="player-kit.js?v=refresh1" defer></script>
-  <script src="app.js?v=cinematic1" defer></script>
+  <script src="app.js?v=netflix1" defer></script>
   <link rel="stylesheet" href="cinematic.css?v=1">
   <link rel="stylesheet" href="entrance.css?v=1">
+  <link rel="stylesheet" href="netflix.css?v=1">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/assets/app-icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,7 +39,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="install.js?v=1" defer></script>
 </head>
-<body class="cinematic" data-auth-state="checking">
+<body class="cinematic netflix" data-auth-state="checking">
   <svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol>
@@ -55,7 +56,7 @@
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5.2-3.4 8.8-8 10-4.6-1.2-8-4.8-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
     <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 3 2 2v3l2 2 3-1 2 3h3l1-3 3-1 2-3-2-2V8l-2-2-3 1-2-4Z"/><circle cx="12" cy="11" r="3"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
-  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol></defs></svg>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol></defs></svg>
   <div class="brand-intro fixed inset-0 z-[1000] grid min-h-dvh place-items-center bg-cinema-950" id="brandIntro" role="dialog" aria-modal="true" aria-label="blue maruya opening">
     <button class="intro-skip" id="skipIntro" type="button">Skip intro</button>
     <div class="brand-intro-stage" aria-hidden="true"><span class="brand-aperture"></span><strong>B</strong><p>blue maruya</p></div>
@@ -132,8 +133,8 @@
     <section class="hero" id="home" aria-labelledby="heroTitle">
       <div class="member-welcome"><span class="welcome-line" id="memberWelcome">Welcome.</span><span>Make yourself at home.</span></div>
       <div class="hero-art" aria-hidden="true"><img class="hero-image is-active" src="assets/zootopia-hero.jpg" alt="" fetchpriority="high"><img class="hero-image" alt=""></div><div class="hero-grain" aria-hidden="true"></div>
-      <div class="hero-content"><p class="eyebrow"><span class="live-dot"></span> IN THE SPOTLIGHT <span class="hero-label">HANDPICKED FOR YOU</span></p><h1 id="heroTitle"><span id="heroTitleText">Your next<br>great escape.</span><img id="heroLogo" alt="" aria-hidden="true" hidden></h1><div class="hero-meta"></div><p class="hero-description">Discover unforgettable stories. Make this moment yours.</p><div class="hero-actions"><button class="button button-primary" id="heroPlay"><svg class="fill-icon"><use href="#i-play"/></svg> Watch now</button><button class="button button-glass" id="heroInfo">More info <svg><use href="#i-arrow"/></svg></button><button class="icon-button hero-save" id="heroSave" aria-label="Add featured title to my list" aria-pressed="false"></button></div></div>
-      <div class="hero-bottom"><div class="hero-slider"><span class="hero-position" id="heroPosition">01 / 01</span><div id="heroDots" class="hero-dots" aria-label="Featured titles"></div><button id="heroPause" class="icon-button small-icon" aria-label="Pause featured rotation" aria-pressed="false">Ⅱ</button><button id="heroNext" class="icon-button small-icon" aria-label="Next featured title"><svg><use href="#i-arrow"/></svg></button></div><a class="scroll-cue" href="#browse">EXPLORE THE COLLECTION <span>↓</span></a></div>
+      <div class="hero-content"><p class="eyebrow"><span class="live-dot"></span> IN THE SPOTLIGHT <span class="hero-label">HANDPICKED FOR YOU</span></p><p class="hero-kind" id="heroKind"><b>B</b> <span id="heroKindText">FILM</span></p><h1 id="heroTitle"><span id="heroTitleText">Your next<br>great escape.</span><img id="heroLogo" alt="" aria-hidden="true" hidden></h1><p class="hero-rank" id="heroRank" hidden><span class="top10-badge"><small>TOP</small>10</span><span id="heroRankText"></span></p><div class="hero-meta"></div><p class="hero-description">Discover unforgettable stories. Make this moment yours.</p><div class="hero-actions"><button class="button button-primary" id="heroPlay"><svg class="fill-icon"><use href="#i-play"/></svg> Play</button><button class="button button-glass" id="heroInfo"><svg><use href="#i-info"/></svg> More Info</button><button class="icon-button hero-save" id="heroSave" aria-label="Add featured title to my list" aria-pressed="false"></button><button class="icon-button hero-shuffle" id="heroShuffle" aria-label="Surprise me with a movie"><svg><use href="#i-shuffle"/></svg></button></div></div>
+      <div class="hero-bottom"><div class="hero-slider"><span class="hero-position" id="heroPosition">01 / 01</span><div id="heroDots" class="hero-dots" aria-label="Featured titles"></div><button id="heroPause" class="icon-button small-icon" aria-label="Pause featured rotation" aria-pressed="false">Ⅱ</button><button id="heroNext" class="icon-button small-icon" aria-label="Next featured title"><svg><use href="#i-arrow"/></svg></button></div><span class="hero-maturity" id="heroMaturity" hidden></span><a class="scroll-cue" href="#browse">EXPLORE THE COLLECTION <span>↓</span></a></div>
     </section>
     <section class="dashboard-dock" id="dashboardDock" aria-label="Your movie night shortcuts" hidden>
       <div class="dock-caption"><span>YOUR MOVIE NIGHT</span><p>One click away.</p></div>
