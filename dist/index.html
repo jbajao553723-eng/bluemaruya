@@ -21,17 +21,17 @@
   <link rel="stylesheet" href="refresh.css?v=refresh1">
   <link rel="stylesheet" href="dashboard-v2.css?v=dashboard2">
   <script src="entrance.js?v=1" defer></script>
-  <script src="experience.js?v=cinematic1" defer></script>
+  <script src="experience.js?v=cinematic2" defer></script>
   <script src="member-preferences.js?v=dashboard2" defer></script>
   <script src="auth.js?v=cinematic1" defer></script>
   <script src="login-scene.js?v=cinematic1" defer></script>
   <script src="preferences.js?v=pink1" defer></script>
   <script src="watch-history.js?v=dashboard2" defer></script>
   <script src="player-kit.js?v=refresh1" defer></script>
-  <script src="app.js?v=netflix2" defer></script>
+  <script src="app.js?v=netflix3" defer></script>
   <link rel="stylesheet" href="cinematic.css?v=1">
   <link rel="stylesheet" href="entrance.css?v=1">
-  <link rel="stylesheet" href="netflix.css?v=2">
+  <link rel="stylesheet" href="netflix.css?v=3">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/assets/app-icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -56,7 +56,7 @@
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5.2-3.4 8.8-8 10-4.6-1.2-8-4.8-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
     <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 3 2 2v3l2 2 3-1 2 3h3l1-3 3-1 2-3-2-2V8l-2-2-3 1-2-4Z"/><circle cx="12" cy="11" r="3"/></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
-  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol></defs></svg>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol><symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol></defs></svg>
   <div class="brand-intro fixed inset-0 z-[1000] grid min-h-dvh place-items-center bg-cinema-950" id="brandIntro" role="dialog" aria-modal="true" aria-label="blue maruya opening">
     <button class="intro-skip" id="skipIntro" type="button">Skip intro</button>
     <div class="brand-intro-stage" aria-hidden="true"><span class="brand-aperture"></span><strong>B</strong><p>blue maruya</p></div>
@@ -117,8 +117,8 @@
         <button class="nav-link" data-view="recent"><svg><use href="#i-clock"/></svg><span>History</span></button>
       </nav>
       <div class="nav-actions"><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button>
-        <div class="search-area"><button class="search-toggle icon-button" id="searchToggle" aria-label="Search titles" aria-expanded="false" aria-controls="searchForm"><svg><use href="#i-search"/></svg></button>
-          <form class="search-form" id="searchForm" role="search"><svg><use href="#i-search"/></svg><input id="searchInput" type="search" placeholder="Find a movie or series" aria-label="Search movies and series" autocomplete="off"></form>
+        <div class="search-area"><button class="search-toggle icon-button" id="searchToggle" type="button" aria-label="Search movies and series" aria-expanded="false" aria-controls="searchForm"><svg><use href="#i-search"/></svg><span class="search-toggle-label">Search</span></button>
+          <form class="search-form" id="searchForm" role="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="searchInput" type="search" placeholder="Search movies, series…" aria-label="Search movies and series" autocomplete="off"><button class="search-clear" id="searchClear" type="button" aria-label="Clear search" hidden><svg><use href="#i-close"/></svg></button><button class="search-submit" id="searchSubmit" type="submit">Search</button></form>
         </div>
         <div class="profile-menu-wrap"><button class="profile-button" id="profileMenuButton" type="button" aria-expanded="false" aria-controls="memberMenu" aria-label="Account menu"><span class="profile-avatar" id="memberAvatar"></span><svg class="profile-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><ul class="member-menu" id="memberMenu" hidden><li class="member-name"><small>YOUR CINEMA PROFILE</small><strong id="memberName">Member</strong><span id="memberUsername"></span></li><li><hr class="menu-divider"></li><li><button class="menu-item" id="settingsButton"><svg><use href="#i-settings"/></svg> Settings</button></li><li><button class="install-link" type="button" data-install><svg><use href="#i-download"/></svg><span data-install-label>Get the app</span></button></li><li><button class="menu-item" id="logoutButton"><svg><use href="#i-logout"/></svg> Sign out</button></li></ul></div>
       </div>
@@ -138,6 +138,39 @@
       <div class="hero-content"><p class="eyebrow"><span class="live-dot"></span> IN THE SPOTLIGHT <span class="hero-label">HANDPICKED FOR YOU</span></p><p class="hero-kind" id="heroKind"><b>B</b> <span id="heroKindText">FILM</span></p><h1 id="heroTitle"><span id="heroTitleText">Your next<br>great escape.</span><img id="heroLogo" alt="" aria-hidden="true" hidden></h1><p class="hero-rank" id="heroRank" hidden><span class="top10-badge"><small>TOP</small>10</span><span id="heroRankText"></span></p><div class="hero-meta"></div><p class="hero-description">Discover unforgettable stories. Make this moment yours.</p><div class="hero-actions"><button class="button button-primary" id="heroPlay"><svg class="fill-icon"><use href="#i-play"/></svg> Play</button><button class="button button-glass" id="heroInfo"><svg><use href="#i-info"/></svg> More Info</button><button class="icon-button hero-save" id="heroSave" aria-label="Add featured title to my list" aria-pressed="false"></button><button class="icon-button hero-shuffle" id="heroShuffle" aria-label="Surprise me with a movie"><svg><use href="#i-shuffle"/></svg></button></div></div>
       <div class="hero-bottom"><div class="hero-slider"><span class="hero-position" id="heroPosition">01 / 01</span><div id="heroDots" class="hero-dots" aria-label="Featured titles"></div><button id="heroPause" class="icon-button small-icon" aria-label="Pause featured rotation" aria-pressed="false">Ⅱ</button><button id="heroNext" class="icon-button small-icon" aria-label="Next featured title"><svg><use href="#i-arrow"/></svg></button></div><span class="hero-maturity" id="heroMaturity" hidden></span><a class="scroll-cue" href="#browse">EXPLORE THE COLLECTION <span>↓</span></a></div>
     </section>
+    <section class="dashboard-search-hub" id="dashboardSearchHub" aria-label="Search and discover movies">
+      <div class="dashboard-search-shell">
+        <div class="dashboard-search-box" id="dashboardSearchBox">
+          <form class="dashboard-search-form" id="dashboardSearchForm" role="search">
+            <svg class="dashboard-search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+            <input id="dashboardSearchInput" type="search" placeholder="Search movies, series, or actors…" aria-label="Search movies, series, or actors" autocomplete="off" enterkeyhint="search">
+            <kbd class="search-kbd" aria-hidden="true">/</kbd>
+            <button class="dashboard-search-clear" id="dashboardSearchClear" type="button" aria-label="Clear search" hidden><svg><use href="#i-close"/></svg></button>
+            <button class="button button-primary dashboard-search-btn" id="dashboardSearchBtn" type="submit"><svg aria-hidden="true"><use href="#i-search"/></svg><span>Search</span></button>
+          </form>
+          <div class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="Search suggestions" hidden></div>
+        </div>
+        <div class="dashboard-quick-row">
+          <div class="search-scope-pills" role="group" aria-label="Search category">
+            <button class="scope-pill active" type="button" data-search-scope="all" aria-pressed="true">All</button>
+            <button class="scope-pill" type="button" data-search-scope="movie" aria-pressed="false">Movies</button>
+            <button class="scope-pill" type="button" data-search-scope="tv" aria-pressed="false">Series</button>
+            <button class="scope-pill" type="button" data-search-scope="actors" aria-pressed="false">Actors</button>
+          </div>
+          <div class="dashboard-mood-pills" aria-label="Quick mood filters">
+            <button class="mood-pill" type="button" data-quick-genre="Action">Action</button>
+            <button class="mood-pill" type="button" data-quick-genre="Animation">Animation</button>
+            <button class="mood-pill" type="button" data-quick-genre="Comedy">Comedy</button>
+            <button class="mood-pill" type="button" data-quick-genre="Drama">Drama</button>
+            <button class="mood-pill" type="button" data-quick-genre="Romance">Romance</button>
+            <button class="mood-pill" type="button" data-quick-genre="Sci-Fi">Sci-Fi</button>
+            <button class="mood-pill" type="button" data-quick-genre="Thriller">Thriller</button>
+            <button class="mood-pill" type="button" data-quick-genre="Horror">Horror</button>
+            <button class="mood-pill mood-surprise" type="button" id="hubSurprise"><svg aria-hidden="true"><use href="#i-shuffle"/></svg><span>Surprise me</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="dashboard-dock" id="dashboardDock" aria-label="Your movie night shortcuts" hidden>
       <div class="dock-caption"><span>YOUR MOVIE NIGHT</span><p>One click away.</p></div>
       <button id="resumeLatest" disabled><span class="dock-icon"><svg><use href="#i-play"/></svg></span><span><strong>Pick up where you left off</strong><small id="resumeLatestLabel">Your next story starts here</small></span><b>↗</b></button>
@@ -147,7 +180,7 @@
     <section id="continueShelf" class="continue-section" aria-label="Continue watching" hidden></section>
     <main id="browse">
       <section id="actorProfile" class="actor-profile" hidden aria-label="Actor profile"></section>
-      <div class="browse-toolbar"><div><p class="eyebrow muted">YOUR NEXT OBSESSION AWAITS</p><h2 id="browseTitle">Find something you’ll love.</h2></div><button class="button button-surprise" id="surpriseButton"><svg><use href="#i-shuffle"/></svg> Surprise me</button><div class="genre-control"><label for="genre">Set the mood</label><select id="genre" class="form-select"><option value="all">All genres</option><option>Action</option><option>Adventure</option><option>Animation</option><option>Comedy</option><option>Crime</option><option>Documentary</option><option>Drama</option><option>Family</option><option>Fantasy</option><option>History</option><option>Horror</option><option>Music</option><option>Mystery</option><option>Romance</option><option>Sci-Fi</option><option>Thriller</option><option>War</option><option>Western</option><option>TV Movie</option><option>Kids</option><option>News</option><option>Reality</option><option>Soap</option><option>Talk</option></select></div></div>
+      <div class="browse-toolbar"><div class="browse-heading-wrap"><p class="eyebrow muted">YOUR NEXT OBSESSION AWAITS</p><h2 id="browseTitle">Find something you’ll love.</h2><div class="active-search-bar" id="activeSearchBar" hidden><div class="search-scope-pills compact" role="group" aria-label="Filter search results by type"><button class="scope-pill active" type="button" data-result-scope="home" aria-pressed="true">All</button><button class="scope-pill" type="button" data-result-scope="movie" aria-pressed="false">Movies</button><button class="scope-pill" type="button" data-result-scope="tv" aria-pressed="false">Series</button><button class="scope-pill" type="button" data-result-scope="actors" aria-pressed="false">Actors</button></div><button class="clear-search-pill" id="clearSearchBanner" type="button"><svg aria-hidden="true"><use href="#i-close"/></svg><span>Clear search</span></button></div></div><button class="button button-surprise" id="surpriseButton"><svg><use href="#i-shuffle"/></svg> Surprise me</button><div class="genre-control"><label for="genre">Set the mood</label><select id="genre" class="form-select"><option value="all">All genres</option><option>Action</option><option>Adventure</option><option>Animation</option><option>Comedy</option><option>Crime</option><option>Documentary</option><option>Drama</option><option>Family</option><option>Fantasy</option><option>History</option><option>Horror</option><option>Music</option><option>Mystery</option><option>Romance</option><option>Sci-Fi</option><option>Thriller</option><option>War</option><option>Western</option><option>TV Movie</option><option>Kids</option><option>News</option><option>Reality</option><option>Soap</option><option>Talk</option></select></div></div>
       <div class="genre-chips" aria-label="Quick genre filters"><button class="chip active" data-genre="all" aria-pressed="true">All genres</button><button class="chip" data-genre="Action" aria-pressed="false">Action</button><button class="chip" data-genre="Adventure" aria-pressed="false">Adventure</button><button class="chip" data-genre="Animation" aria-pressed="false">Animation</button><button class="chip" data-genre="Comedy" aria-pressed="false">Comedy</button><button class="chip" data-genre="Documentary" aria-pressed="false">Documentary</button><button class="chip" data-genre="Drama" aria-pressed="false">Drama</button><button class="chip" data-genre="Romance" aria-pressed="false">Romance</button><button class="chip" data-genre="Thriller" aria-pressed="false">Thriller</button><button class="chip" data-genre="Sci-Fi" aria-pressed="false">Sci-Fi</button></div>
       <div class="collection-sort" id="sortWrap" hidden><label for="sortSelect">Sort loaded titles</label><select id="sortSelect" class="form-select"><option value="default">Default order</option><option value="title">Title A–Z</option><option value="year">Newest release</option><option value="rating">Top rated</option></select><span id="collectionCount" aria-live="polite"></span></div>
       <div id="shelves"></div><p class="catalog-error" id="catalogError" role="status" hidden><span id="catalogErrorText"></span> <button id="retryCatalog" class="button button-secondary">Try again</button></p><div class="actor-grid" id="actorGrid" hidden></div>

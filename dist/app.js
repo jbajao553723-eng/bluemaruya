@@ -17,17 +17,40 @@ const $=selector=>document.querySelector(selector);
 const keyFor=movie=>`${movie.type}:${movie.id}`;
 const isKristine=()=>window.memberAuth.currentMember()?.username==='kdumangas';
 const preferenceMovies=()=>state.home?.preferences?.length?state.home.preferences:window.memberPreferences;
-const state={person:null,error:'',view:'home',genre:'all',query:'',sort:'default',items:[],home:null,saved:new Map(),recent:[],selected:null,playing:null,page:1,totalPages:1,loading:false,request:0,logoRequest:0};
+const state={person:null,error:'',view:'home',genre:'all',query:'',searchScope:'all',sort:'default',items:[],home:null,saved:new Map(),recent:[],selected:null,playing:null,page:1,totalPages:1,loading:false,request:0,logoRequest:0,suggestRequest:0,suggestIndex:-1};
 const logoCache=new Map();
 const playback={owner:'',time:0,duration:0,savedAt:0,server:'',persistedServer:'',pendingSeek:false,targetTime:0,request:0};
 const playbackMonitor=window.playerKit.createMonitor(setPlaybackStatus);
 let toastTimer;
 let searchTimer;
+let suggestTimer;
 
 function assetUrl(value){if(!value)return 'assets/noir-hero.png';return /^https?:\/\//.test(value)?value:`assets/${value}`;}
 function escapeHtml(value){return String(value??'').replace(/[&<>"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[character]));}
 function remember(items){for(const movie of items||[]){if(movie?.id&&movie?.type){const saved=state.saved.get(keyFor(movie));if(saved)state.saved.set(keyFor(movie),{...saved,...movie});}}}
 const savedKey=()=>`blue-maruya-list:${window.memberAuth.currentMember()?.username||'guest'}`;
+const recentSearchKey=()=>`blue-maruya-searches:${window.memberAuth.currentMember()?.username||'guest'}`;
+function readRecentSearches(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(recentSearchKey())||'[]');
+    return Array.isArray(parsed)?parsed.filter(item=>typeof item==='string'&&item.trim().length>=2).slice(0,6):[];
+  }catch{return [];}
+}
+function saveRecentSearch(term){
+  const clean=String(term||'').trim().slice(0,80);
+  if(clean.length<2)return;
+  try{
+    const next=[clean,...readRecentSearches().filter(item=>item.toLowerCase()!==clean.toLowerCase())].slice(0,6);
+    localStorage.setItem(recentSearchKey(),JSON.stringify(next));
+  }catch{}
+}
+function removeRecentSearch(term){
+  try{
+    const next=readRecentSearches().filter(item=>item.toLowerCase()!==String(term).toLowerCase());
+    localStorage.setItem(recentSearchKey(),JSON.stringify(next));
+  }catch{}
+}
+function clearRecentSearches(){try{localStorage.removeItem(recentSearchKey());}catch{}}
 function persistSaved(){try{localStorage.setItem(savedKey(),JSON.stringify([...state.saved.values()]));}catch{}}
 function loadSaved(){
   state.saved.clear();
@@ -87,7 +110,10 @@ function timeLabel(time){const seconds=Math.floor(time||0);return `${Math.floor(
 function createShelf(title,subtitle,movies,ranked=false,options={}){
   if(!movies?.length)return;
   const section=document.createElement('section');section.className=`shelf${ranked?' ranked':''}`;
-  section.innerHTML=`<div class="shelf-heading"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div></div><div class="rail-wrap"><button class="rail-arrow prev" aria-label="Previous titles in ${escapeHtml(title)}">${icons.left}</button><div class="rail"></div><button class="rail-arrow next" aria-label="Next titles in ${escapeHtml(title)}">${icons.right}</button></div>`;
+  const seeAllMarkup=options.seeAllView?`<button class="shelf-see-all" type="button" data-see-all="${escapeHtml(options.seeAllView)}"><span>See all</span>${icons.right}</button>`:'';
+  section.innerHTML=`<div class="shelf-heading"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div>${seeAllMarkup}</div><div class="rail-wrap"><button class="rail-arrow prev" aria-label="Previous titles in ${escapeHtml(title)}">${icons.left}</button><div class="rail"></div><button class="rail-arrow next" aria-label="Next titles in ${escapeHtml(title)}">${icons.right}</button></div>`;
+  const seeAllBtn=section.querySelector('.shelf-see-all');
+  if(seeAllBtn)seeAllBtn.onclick=()=>setView(options.seeAllView);
   const rail=section.querySelector('.rail');
   const top10Set=options.top10Keys||new Set();
   movies.forEach((movie,index)=>{const card=createCard(movie,{...options,landscape:ranked?false:options.landscape,top10:!ranked&&top10Set.has(keyFor(movie))});if(ranked){const wrap=document.createElement('div');wrap.className='rank-card';const rank=document.createElement('span');rank.className='rank-number';rank.setAttribute('aria-hidden','true');rank.textContent=String(index+1);wrap.append(rank,card);rail.append(wrap);}else rail.append(card);});
@@ -99,7 +125,7 @@ function createShelf(title,subtitle,movies,ranked=false,options={}){
   return section;
 }
 function createRecentShelf(){
-  if(state.recent.length){const section=createShelf('Recently Watched','Your latest picks on this device. Jump back into a movie or your last episode.',state.recent,false,{recent:true,landscape:true});section.classList.add('recent-shelf');}
+  if(state.recent.length){const section=createShelf('Recently Watched','Your latest picks on this device. Jump back into a movie or your last episode.',state.recent,false,{recent:true,landscape:true,seeAllView:'recent'});section.classList.add('recent-shelf');}
   else{
     const section=document.createElement('section');section.className='recent-empty';section.innerHTML='<span class="recent-empty-icon"><svg><use href="#i-clock"/></svg></span><div><h2>Recently Watched</h2><p>Your movie nights will appear here. History is private to your account on this device.</p></div><button class="button button-secondary">Find a movie <svg><use href="#i-arrow"/></svg></button>';section.querySelector('button').onclick=()=>setView('movie');$('#shelves').append(section);
   }
@@ -112,6 +138,18 @@ function createPreferences(){
   const heading=section.querySelector('.shelf-heading>div');
   const eyebrow=document.createElement('span');eyebrow.className='preferences-eyebrow';eyebrow.textContent='♡ PICKED JUST FOR YOU';heading.prepend(eyebrow);
   section.setAttribute('aria-label','Your movie preferences');
+}
+
+function createSkeletonGrid(count,actors=false){
+  const fragment=document.createDocumentFragment();
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className=actors?'skeleton-card skeleton-actor':'col skeleton-card';
+    el.setAttribute('aria-hidden','true');
+    el.innerHTML='<div class="skeleton-art"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div>';
+    fragment.append(el);
+  }
+  return fragment;
 }
 
 function updateHero(movie){
@@ -146,15 +184,55 @@ async function loadTitleLogo(movie,request){
 }
 function sortedItems(items){const sorted=[...items];if(state.sort==='title')sorted.sort((a,b)=>a.title.localeCompare(b.title));else if(state.sort==='year')sorted.sort((a,b)=>(b.year||0)-(a.year||0));else if(state.sort==='rating')sorted.sort((a,b)=>ratingScore(b)-ratingScore(a));return sorted;}
 function ratingScore(movie){return movie.rating?.startsWith('★')?Number.parseFloat(movie.rating.slice(1))||0:0;}
-function renderGrid(items){const grid=$('#catalogGrid');grid.classList.toggle('history-grid',state.view==='recent');grid.replaceChildren(...sortedItems(items).map((movie,index)=>{const column=document.createElement('div');column.className='col';column.style.setProperty('--stagger',String(Math.min(index,12)));column.append(createCard(movie,{recent:state.view==='recent',landscape:true}));return column;}));}
+function renderGrid(items){
+  const grid=$('#catalogGrid');
+  grid.classList.toggle('history-grid',state.view==='recent');
+  grid.classList.toggle('is-mixed-search',Boolean(state.query.trim())&&['home','saved','recent','actor'].includes(state.view));
+  grid.replaceChildren(...sortedItems(items).map((movie,index)=>{
+    const column=document.createElement('div');
+    column.className='col';
+    column.style.setProperty('--stagger',String(Math.min(index,12)));
+    column.append(createCard(movie,{recent:state.view==='recent',landscape:true}));
+    return column;
+  }));
+}
 function matchesGenre(movie){if(state.genre==='all')return true;const aliases={'Sci-Fi':['Science Fiction','Sci-Fi','Sci-Fi & Fantasy'],'Action':['Action','Action & Adventure'],'Adventure':['Adventure','Action & Adventure'],'Fantasy':['Fantasy','Sci-Fi & Fantasy'],'War':['War','War & Politics']};return movie.genres?.some(genre=>(aliases[state.genre]||[state.genre]).includes(genre));}
 function filterSaved(){const query=state.query.toLowerCase().trim();return [...state.saved.values()].filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
 function filterRecent(){const query=state.query.toLowerCase().trim();return state.recent.filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
+
+function syncSearchInputs(value){
+  const text=String(value??'');
+  if($('#searchInput')&&$('#searchInput').value!==text)$('#searchInput').value=text;
+  if($('#dashboardSearchInput')&&$('#dashboardSearchInput').value!==text)$('#dashboardSearchInput').value=text;
+  if($('#searchClear'))$('#searchClear').hidden=!text.length;
+  if($('#dashboardSearchClear'))$('#dashboardSearchClear').hidden=!text.length;
+}
+function syncSearchScope(scope){
+  state.searchScope=scope;
+  document.querySelectorAll('[data-search-scope]').forEach(button=>{
+    const active=button.dataset.searchScope===scope;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+  const placeholders={all:'Search movies, series, or actors…',movie:'Search movies by title…',tv:'Search TV series by title…',actors:'Search actors by name…'};
+  if($('#dashboardSearchInput'))$('#dashboardSearchInput').placeholder=placeholders[scope]||placeholders.all;
+}
+function syncResultScopeButtons(){
+  const activeView=['home','movie','tv','actors'].includes(state.view)?state.view:'home';
+  document.querySelectorAll('[data-result-scope]').forEach(button=>{
+    const active=button.dataset.resultScope===activeView;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+}
+
 function render(){
   const homeMode=state.view==='home'&&!state.query.trim()&&state.genre==='all';
   const peopleMode=state.view==='actors';
+  const hasSearchQuery=Boolean(state.query.trim());
   $('#nav').classList.toggle('is-solid',!homeMode);
   $('#browse').dataset.home=String(homeMode);
+  $('#dashboardSearchHub').hidden=!homeMode;
   $('#actorGrid').hidden=!peopleMode;$('#surpriseButton').hidden=!homeMode;$('#loadMore').firstChild.textContent=peopleMode?'More actors ':'More stories ';
   $('#actorGrid').replaceChildren();
   $('#actorProfile').hidden=state.view!=='actor';
@@ -166,6 +244,8 @@ function render(){
   $('#memberDashboardIntro').hidden=true;
   $('#wakenDashboardIntro').hidden=!homeMode;
   $('#sortWrap').hidden=homeMode||peopleMode;
+  $('#activeSearchBar').hidden=!hasSearchQuery||!['home','movie','tv','actors'].includes(state.view);
+  if(!$('#activeSearchBar').hidden)syncResultScopeButtons();
   $('#home').hidden=!homeMode;$('#browse').style.marginTop=homeMode?'':'110px';
   $('#shelves').replaceChildren();$('#catalogGrid').replaceChildren();
   const items=state.view==='saved'?filterSaved():state.view==='recent'?filterRecent():state.view==='actor'?state.items.filter(movie=>matchesGenre(movie)&&(!state.query.trim()||movie.title.toLowerCase().includes(state.query.trim().toLowerCase()))):state.items;
@@ -179,17 +259,25 @@ function render(){
     const unfinished=state.recent.filter(movie=>movie.time>15&&!movie.completed);
     if(unfinished.length){const shelf=createShelf('Continue Watching','Right back to your saved moment.',unfinished,false,{recent:true,landscape:true});shelf.classList.add('recent-shelf');$('#continueShelf').append(shelf);$('#continueShelf').hidden=false;}
     createShelf('Trending Now','The movies and series everyone is talking about.',trending,false,{landscape:true,top10Keys});
-    if(state.saved.size)createShelf('My List','Your saved movies and series.',[...state.saved.values()],false,{landscape:true,top10Keys});
+    if(state.saved.size)createShelf('My List','Your saved movies and series.',[...state.saved.values()],false,{landscape:true,top10Keys,seeAllView:'saved'});
     createShelf('Top 10 Today','Most-watched titles right now.',trending.slice(0,10),true);
-    createShelf('Popular Movies','Explore popular movies.',moviesList,false,{landscape:true,top10Keys});
+    createShelf('Popular Movies','Explore popular movies.',moviesList,false,{landscape:true,top10Keys,seeAllView:'movie'});
     if(isKristine())createPreferences();
-    createShelf('Popular Series','Your next series obsession.',tvList,false,{landscape:true,top10Keys});
+    createShelf('Popular Series','Your next series obsession.',tvList,false,{landscape:true,top10Keys,seeAllView:'tv'});
     createRecentShelf();
     document.querySelectorAll('#continueShelf .shelf, #shelves .shelf').forEach((shelf,index)=>shelf.style.setProperty('--stagger',String(Math.min(index,6))));
     $('#browseTitle').textContent=isKristine()?'A good story for every mood.':'Find something you’ll love.';
   }else{
-    if(peopleMode)$('#actorGrid').replaceChildren(...items.map((person,index)=>{const card=createActorCard(person);card.style.setProperty('--stagger',String(Math.min(index,12)));return card;})); else renderGrid(items);
-    $('#browseTitle').textContent=state.query.trim()?`Results for “${state.query.trim()}”`:({movie:'Movies',tv:'Series',saved:'My List',recent:'Recently Watched',actors:'Actors',actor:state.person?`Starring ${state.person.name}`:'Actor filmography',home:'Explore'}[state.view]);
+    if(state.loading&&!items.length){
+      if(peopleMode)$('#actorGrid').append(createSkeletonGrid(10,true));
+      else $('#catalogGrid').append(createSkeletonGrid(8,false));
+    }else if(peopleMode){
+      $('#actorGrid').replaceChildren(...items.map((person,index)=>{const card=createActorCard(person);card.style.setProperty('--stagger',String(Math.min(index,12)));return card;}));
+    }else{
+      renderGrid(items);
+    }
+    const scopeLabel={home:'',movie:' in Movies',tv:' in Series',actors:' in Actors'}[state.view]||'';
+    $('#browseTitle').textContent=state.query.trim()?`Results for “${state.query.trim()}”${scopeLabel}`:({movie:'Movies',tv:'Series',saved:'My List',recent:'Recently Watched',actors:'Actors',actor:state.person?`Starring ${state.person.name}`:'Actor filmography',home:'Explore'}[state.view]);
   }
   const hasItems=homeMode||items.length>0;
   $('#empty').hidden=hasItems||state.loading||!!state.error;
@@ -197,7 +285,7 @@ function render(){
   $('#emptyText').textContent=state.view==='saved'&&!state.saved.size?'Tap the + on a title to save it here. Your list stays on this device.':'Try a different title or explore another genre.';
   if(peopleMode){$('#emptyTitle').textContent='No actors found.';$('#emptyText').textContent='Try another name or clear your search to explore popular actors.';}
   if(state.view==='recent'&&!state.recent.length){$('#emptyTitle').textContent='Your next movie night starts here.';$('#emptyText').textContent='Start a movie or episode and it will appear here. Your history stays separate for each account on this device.';}
-  $('#catalogStatus').hidden=!state.loading;$('#catalogStatusText').textContent=state.loading?'Finding your next favorite…':'';
+  $('#catalogStatus').hidden=!state.loading||(!homeMode&&!items.length);$('#catalogStatusText').textContent=state.loading?'Finding your next favorite…':'';
   $('#loadMore').hidden=homeMode||['saved','recent'].includes(state.view)||state.loading||state.page>=state.totalPages;
   updateSaveButtons();
   $('#dashboardDock').hidden=!homeMode;
@@ -235,23 +323,249 @@ function pulseNavProgress(){
   bar.classList.remove('is-running');void bar.offsetWidth;bar.classList.add('is-running');
 }
 function animateViewTransition(){
-  for(const target of [$('#home'),$('#continueShelf'),$('#browse')]){
+  for(const target of [$('#home'),$('#dashboardSearchHub'),$('#continueShelf'),$('#browse')]){
     if(!target||target.hidden)continue;
     target.classList.remove('view-animate');void target.offsetWidth;target.classList.add('view-animate');
   }
 }
 function updateNavIndicator(){
   const indicator=$('#navIndicator');const nav=$('.nav-links');const active=$('.nav-links .nav-link.active');
-  if(!indicator||!nav||!active||window.innerWidth<768){if(indicator)indicator.classList.remove('is-ready');return;}
+  if(!indicator||!nav||!active){if(indicator)indicator.classList.remove('is-ready');return;}
   const navRect=nav.getBoundingClientRect();const btnRect=active.getBoundingClientRect();
   if(!btnRect.width)return;
+  if(window.innerWidth<768){
+    const pillWidth=Math.min(36,Math.max(22,btnRect.width*0.45));
+    const offset=btnRect.left-navRect.left+(btnRect.width-pillWidth)/2;
+    indicator.style.width=`${pillWidth}px`;
+    indicator.style.transform=`translateX(${offset}px)`;
+    indicator.classList.add('is-ready');
+    return;
+  }
   indicator.style.width=`${btnRect.width}px`;
   indicator.style.transform=`translateX(${btnRect.left-navRect.left}px)`;
   indicator.classList.add('is-ready');
 }
-function setGenre(genre){state.error='';state.genre=genre;$('#genre').value=genre;document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre===genre;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});if(state.view==='home'&&genre!=='all'){state.view=tvGenres.includes(genre)&&!movieGenres.includes(genre)?'tv':'movie';configureGenres(state.view);$('#genre').value=genre;}syncNavigation();pulseNavProgress();if(state.view==='home'&&!state.query.trim())loadHome();else loadCollection();animateViewTransition();}
+function setGenre(genre){
+  closeSuggestions();
+  state.error='';state.genre=genre;$('#genre').value=genre;
+  document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre===genre;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});
+  if(state.view==='home'&&genre!=='all'){state.view=tvGenres.includes(genre)&&!movieGenres.includes(genre)?'tv':'movie';configureGenres(state.view);$('#genre').value=genre;}
+  syncNavigation();pulseNavProgress();
+  if(state.view==='home'&&!state.query.trim())loadHome();else loadCollection();
+  animateViewTransition();
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+}
 function syncNavigation(){document.querySelectorAll('.nav-links [data-view]').forEach(button=>{const active=button.dataset.view===(state.view==='actor'?'actors':state.view);button.classList.toggle('active',active);active?button.setAttribute('aria-current','page'):button.removeAttribute('aria-current');});requestAnimationFrame(updateNavIndicator);}
-function setView(view){clearTimeout(searchTimer);state.error='';state.person=null;state.view=view;configureGenres(view);$('#searchInput').placeholder=view==='actors'?'Search actors by name':'Find a movie or series';$('#searchInput').setAttribute('aria-label',view==='actors'?'Search actors':'Search movies and series');state.items=[];state.query='';state.genre='all';state.sort='default';$('#sortSelect').value='default';$('#searchInput').value='';$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');$('#genre').value='all';document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre==='all';button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});syncNavigation();pulseNavProgress();if(view==='home')loadHome();else loadCollection();animateViewTransition();window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
+function setView(view){
+  clearTimeout(searchTimer);clearTimeout(suggestTimer);closeSuggestions();
+  state.error='';state.person=null;state.view=view;configureGenres(view);
+  $('#searchInput').placeholder=view==='actors'?'Search actors by name':'Search movies, series…';
+  $('#searchInput').setAttribute('aria-label',view==='actors'?'Search actors':'Search movies and series');
+  state.items=[];state.query='';state.genre='all';state.sort='default';$('#sortSelect').value='default';
+  syncSearchInputs('');
+  if(view==='home')syncSearchScope('all');
+  else if(['movie','tv','actors'].includes(view))syncSearchScope(view);
+  $('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');
+  $('#genre').value='all';
+  document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre==='all';button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});
+  syncNavigation();pulseNavProgress();
+  if(view==='home')loadHome();else loadCollection();
+  animateViewTransition();
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+}
+
+/* ---------- Live Search & Instant Suggestions ---------- */
+function localCatalogPool(){
+  const map=new Map();
+  const sources=[...(state.home?.trending||[]),...(state.home?.movies||[]),...(state.home?.tv||[]),...(state.home?.preferences||[]),...state.saved.values(),...state.recent,...fallbackCatalog];
+  for(const item of sources){
+    if(item?.id&&item?.type&&!map.has(keyFor(item)))map.set(keyFor(item),item);
+  }
+  return [...map.values()];
+}
+function localQuickMatches(query,scope){
+  if(scope==='actors')return [];
+  const q=query.toLowerCase();
+  return localCatalogPool().filter(item=>{
+    if((scope==='movie'||scope==='tv')&&item.type!==scope)return false;
+    return `${item.title} ${item.year||''} ${(item.genres||[]).join(' ')}`.toLowerCase().includes(q);
+  }).slice(0,5);
+}
+function closeSuggestions(){
+  const panel=$('#searchSuggestions');
+  if(!panel)return;
+  panel.hidden=true;
+  panel.replaceChildren();
+  state.suggestIndex=-1;
+  $('#dashboardSearchBox')?.classList.remove('has-suggestions');
+}
+function updateSuggestionHighlight(){
+  const items=[...document.querySelectorAll('#searchSuggestions .suggestion-item')];
+  items.forEach((el,i)=>el.classList.toggle('is-highlighted',i===state.suggestIndex));
+  if(state.suggestIndex>=0&&items[state.suggestIndex])items[state.suggestIndex].scrollIntoView({block:'nearest'});
+}
+function renderEmptySuggestions(panel,query){
+  panel.replaceChildren();
+  if(query.length===1){
+    const hint=document.createElement('p');
+    hint.className='suggestion-hint';
+    hint.textContent='Type one more letter to search the full catalog…';
+    panel.append(hint);
+    const locals=localQuickMatches(query,state.searchScope);
+    if(locals.length)appendTitleSuggestions(panel,locals,false);
+    return;
+  }
+  const recents=readRecentSearches();
+  if(recents.length){
+    const group=document.createElement('div');group.className='suggestion-group';
+    const header=document.createElement('div');header.className='suggestion-group-head';
+    header.innerHTML='<span>Recent searches</span><button type="button" class="suggestion-clear-all">Clear</button>';
+    header.querySelector('.suggestion-clear-all').onclick=()=>{clearRecentSearches();renderEmptySuggestions(panel,'');};
+    const chips=document.createElement('div');chips.className='suggestion-chips';
+    for(const term of recents){
+      const wrap=document.createElement('span');wrap.className='recent-chip-wrap';
+      const btn=document.createElement('button');btn.type='button';btn.className='suggestion-chip';btn.textContent=term;
+      btn.onclick=()=>executeSearch(term,state.searchScope);
+      const del=document.createElement('button');del.type='button';del.className='recent-chip-del';del.setAttribute('aria-label',`Remove ${term}`);del.textContent='×';
+      del.onclick=e=>{e.stopPropagation();removeRecentSearch(term);renderEmptySuggestions(panel,'');};
+      wrap.append(btn,del);chips.append(wrap);
+    }
+    group.append(header,chips);panel.append(group);
+  }
+  const trending=(state.home?.trending||fallbackCatalog).slice(0,6);
+  if(trending.length){
+    const group=document.createElement('div');group.className='suggestion-group';
+    const header=document.createElement('div');header.className='suggestion-group-head';
+    header.innerHTML='<span>Trending right now</span>';
+    const chips=document.createElement('div');chips.className='suggestion-chips';
+    for(const item of trending){
+      const btn=document.createElement('button');btn.type='button';btn.className='suggestion-chip is-trending';
+      btn.textContent=item.title;
+      btn.onclick=()=>{closeSuggestions();openDetails(item);};
+      chips.append(btn);
+    }
+    group.append(header,chips);panel.append(group);
+  }
+}
+function appendTitleSuggestions(panel,results,isActors){
+  const list=document.createElement('div');list.className='suggestion-list';
+  for(const item of results.slice(0,6)){
+    const row=document.createElement('div');row.className='suggestion-item';row.setAttribute('role','option');
+    if(isActors){
+      const thumb=item.image?`<img src="${escapeHtml(item.image)}" alt="" loading="lazy">`:`<span class="suggestion-initials">${escapeHtml(item.name.split(' ').map(p=>p[0]).slice(0,2).join(''))}</span>`;
+      row.innerHTML=`<button type="button" class="suggestion-main"><span class="suggestion-thumb is-actor">${thumb}</span><span class="suggestion-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.knownFor||'Actor')}</small></span><span class="suggestion-tag">ACTOR</span></button>`;
+      row.querySelector('.suggestion-main').onclick=()=>{closeSuggestions();openActor(item);};
+    }else{
+      const art=assetUrl(item.image||item.backdrop);
+      const meta=[item.year,item.rating,item.genres?.[0]].filter(Boolean).join(' · ');
+      row.innerHTML=`<button type="button" class="suggestion-main"><span class="suggestion-thumb"><img src="${escapeHtml(art)}" alt="" loading="lazy"></span><span class="suggestion-info"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(meta||(item.type==='tv'?'Series':'Movie'))}</small></span><span class="suggestion-tag">${item.type==='tv'?'SERIES':'MOVIE'}</span></button><button type="button" class="suggestion-play" aria-label="Play ${escapeHtml(item.title)}">${icons.play}</button>`;
+      const img=row.querySelector('img');
+      img.addEventListener('error',()=>{if(!img.dataset.fallback){img.dataset.fallback='true';img.src='assets/noir-hero.png';}});
+      row.querySelector('.suggestion-main').onclick=()=>{closeSuggestions();openDetails(item);};
+      row.querySelector('.suggestion-play').onclick=e=>{e.stopPropagation();closeSuggestions();openPlayer(item);};
+    }
+    list.append(row);
+  }
+  panel.append(list);
+}
+function renderLiveSuggestions(query,results,isActors,loading=false){
+  const panel=$('#searchSuggestions');
+  if(!panel)return;
+  panel.replaceChildren();
+  state.suggestIndex=-1;
+  if(results.length){
+    appendTitleSuggestions(panel,results,isActors);
+  }else if(loading){
+    const status=document.createElement('p');status.className='suggestion-hint is-loading';
+    status.innerHTML='<span class="spinner"></span><span>Searching catalog…</span>';
+    panel.append(status);
+  }else{
+    const empty=document.createElement('p');empty.className='suggestion-hint';
+    empty.textContent=`No quick matches for “${query}”. Press Search to browse all.`;
+    panel.append(empty);
+  }
+  const footer=document.createElement('button');
+  footer.type='button';footer.className='suggestion-footer suggestion-item';
+  footer.innerHTML=`<svg aria-hidden="true"><use href="#i-search"/></svg><span>See all results for “<strong>${escapeHtml(query)}</strong>”</span>`;
+  footer.onclick=()=>executeSearch(query,state.searchScope);
+  panel.append(footer);
+  panel.hidden=false;
+  $('#dashboardSearchBox')?.classList.add('has-suggestions');
+}
+function triggerLiveSuggestions(rawQuery){
+  const panel=$('#searchSuggestions');
+  if(!panel||$('#dashboardSearchHub').hidden)return;
+  const query=String(rawQuery||'').trim();
+  clearTimeout(suggestTimer);
+  const req=++state.suggestRequest;
+  if(query.length<2){
+    renderEmptySuggestions(panel,query);
+    panel.hidden=!panel.childElementCount;
+    $('#dashboardSearchBox')?.classList.toggle('has-suggestions',!panel.hidden);
+    return;
+  }
+  const isActors=state.searchScope==='actors';
+  const locals=localQuickMatches(query,state.searchScope);
+  renderLiveSuggestions(query,locals,isActors,true);
+  suggestTimer=setTimeout(async()=>{
+    try{
+      const params=isActors?{mode:'people',query,page:1}:{mode:'search',query,type:state.searchScope==='all'?'all':state.searchScope,page:1};
+      const data=await requestCatalog(params);
+      if(req!==state.suggestRequest||$('#dashboardSearchHub').hidden)return;
+      const merged=isActors?(data.results||[]):[...new Map([...(data.results||[]),...locals].map(item=>[keyFor(item),item])).values()];
+      remember(data.results);
+      renderLiveSuggestions(query,merged,isActors,false);
+    }catch{
+      if(req!==state.suggestRequest||$('#dashboardSearchHub').hidden)return;
+      renderLiveSuggestions(query,locals,isActors,false);
+    }
+  },220);
+}
+function executeSearch(rawQuery,scopeOverride=null){
+  clearTimeout(searchTimer);clearTimeout(suggestTimer);
+  const query=String(rawQuery??'').trim();
+  if(!query){
+    notify('Type a movie, series, or actor name to search.');
+    const target=$('#dashboardSearchHub').hidden?$('#searchInput'):$('#dashboardSearchInput');
+    target?.focus();
+    return;
+  }
+  const localOnly=['saved','recent','actor'].includes(state.view)&&!scopeOverride;
+  if(!localOnly&&query.length<2){
+    notify('Enter at least 2 characters to search.');
+    return;
+  }
+  closeSuggestions();
+  saveRecentSearch(query);
+  const scope=scopeOverride||(state.view==='actors'?'actors':state.view==='movie'?'movie':state.view==='tv'?'tv':'all');
+  if(!localOnly){
+    state.person=null;
+    state.view=scope==='all'?'home':scope;
+    configureGenres(state.view);
+    syncSearchScope(scope);
+    syncNavigation();
+  }
+  state.query=query;
+  state.error='';
+  state.items=[];
+  syncSearchInputs(query);
+  $('#searchForm').classList.remove('open');
+  $('#searchToggle').setAttribute('aria-expanded','false');
+  pulseNavProgress();
+  if(localOnly)render();
+  else loadCollection();
+  animateViewTransition();
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+}
+function clearActiveSearch(){
+  clearTimeout(searchTimer);clearTimeout(suggestTimer);closeSuggestions();
+  state.query='';
+  state.error='';
+  syncSearchInputs('');
+  if(state.view==='home'&&state.genre==='all'){loadHome();}
+  else if(['saved','recent','actor'].includes(state.view)){render();}
+  else{loadCollection();}
+}
 
 function fillDetails(movie){
   $('#detailTitle').textContent=movie.title;$('#detailType').textContent=movie.type==='tv'?'SERIES':'MOVIE';
@@ -328,15 +642,91 @@ window.addEventListener('message',event=>{
 
 document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>setView(button.dataset.view));
 document.querySelectorAll('[data-genre]').forEach(button=>button.onclick=()=>setGenre(button.dataset.genre));
+document.querySelectorAll('[data-quick-genre]').forEach(button=>button.onclick=()=>setGenre(button.dataset.quickGenre));
+document.querySelectorAll('[data-search-scope]').forEach(button=>button.onclick=()=>{
+  syncSearchScope(button.dataset.searchScope);
+  if(document.activeElement===$('#dashboardSearchInput')||!$('#searchSuggestions').hidden){
+    triggerLiveSuggestions($('#dashboardSearchInput').value);
+  }
+});
+document.querySelectorAll('[data-result-scope]').forEach(button=>button.onclick=()=>{
+  const targetView=button.dataset.resultScope;
+  if(targetView===state.view)return;
+  state.view=targetView;
+  configureGenres(targetView);
+  syncSearchScope(targetView==='home'?'all':targetView);
+  syncNavigation();
+  pulseNavProgress();
+  loadCollection();
+  animateViewTransition();
+});
 $('#genre').onchange=event=>setGenre(event.target.value);
-$('#searchForm').onsubmit=event=>event.preventDefault();
-$('#searchInput').oninput=event=>{state.query=event.target.value;if(state.view!=='actor'){state.items=[];++state.request;}clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(['saved','recent'].includes(state.view)){render();return;}if(!state.query.trim()&&state.view==='home')loadHome();else loadCollection();},350);};
+
+/* Header search form */
+$('#searchForm').onsubmit=event=>{event.preventDefault();executeSearch($('#searchInput').value);};
+$('#searchInput').oninput=event=>{
+  const value=event.target.value;
+  syncSearchInputs(value);
+  state.query=value;
+  const trimmed=value.trim();
+  clearTimeout(searchTimer);
+  if(['saved','recent','actor'].includes(state.view)){searchTimer=setTimeout(()=>render(),200);return;}
+  if(!trimmed){
+    if(state.view==='home'&&state.genre==='all')loadHome();
+    else loadCollection();
+    return;
+  }
+  if(trimmed.length<2)return;
+  state.items=[];++state.request;
+  searchTimer=setTimeout(()=>{saveRecentSearch(trimmed);loadCollection();},320);
+};
+$('#searchClear').onclick=()=>{clearActiveSearch();$('#searchInput').focus();};
+
+/* Dashboard search hub */
+$('#dashboardSearchForm').onsubmit=event=>{
+  event.preventDefault();
+  executeSearch($('#dashboardSearchInput').value,state.searchScope);
+};
+$('#dashboardSearchInput').addEventListener('focus',()=>triggerLiveSuggestions($('#dashboardSearchInput').value));
+$('#dashboardSearchInput').addEventListener('input',event=>{
+  syncSearchInputs(event.target.value);
+  triggerLiveSuggestions(event.target.value);
+});
+$('#dashboardSearchInput').addEventListener('keydown',event=>{
+  const items=[...document.querySelectorAll('#searchSuggestions .suggestion-item')];
+  if(event.key==='Escape'){closeSuggestions();$('#dashboardSearchInput').blur();return;}
+  if(!items.length||$('#searchSuggestions').hidden)return;
+  if(event.key==='ArrowDown'){event.preventDefault();state.suggestIndex=(state.suggestIndex+1)%items.length;updateSuggestionHighlight();}
+  else if(event.key==='ArrowUp'){event.preventDefault();state.suggestIndex=(state.suggestIndex-1+items.length)%items.length;updateSuggestionHighlight();}
+  else if(event.key==='Enter'&&state.suggestIndex>=0){
+    event.preventDefault();
+    const target=items[state.suggestIndex];
+    const mainBtn=target.querySelector('.suggestion-main')||target;
+    mainBtn.click();
+  }
+});
+$('#dashboardSearchClear').onclick=()=>{syncSearchInputs('');triggerLiveSuggestions('');$('#dashboardSearchInput').focus();};
+$('#clearSearchBanner').onclick=clearActiveSearch;
+
 $('#sortSelect').onchange=event=>{state.sort=event.target.value;render();};
 function surpriseMovie(){const pool=[...(state.home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie')),...state.saved.values()].filter(movie=>movie.type==='movie');const unseen=pool.filter(movie=>!state.recent.some(entry=>keyFor(entry)===keyFor(movie)));const choices=unseen.length?unseen:pool;openDetails(choices[Math.floor(Math.random()*choices.length)]);}
-$('#surpriseButton').onclick=surpriseMovie;$('#dockSurprise').onclick=surpriseMovie;if($('#heroShuffle'))$('#heroShuffle').onclick=surpriseMovie;
+$('#surpriseButton').onclick=surpriseMovie;$('#dockSurprise').onclick=surpriseMovie;if($('#heroShuffle'))$('#heroShuffle').onclick=surpriseMovie;if($('#hubSurprise'))$('#hubSurprise').onclick=surpriseMovie;
 $('#resumeLatest').onclick=()=>{const movie=state.recent.find(item=>item.time>15&&!item.completed);if(movie)openPlayer(movie,movie);};
-$('#searchToggle').onclick=()=>{const open=$('#searchForm').classList.toggle('open');$('#searchToggle').setAttribute('aria-expanded',open);if(open)$('#searchInput').focus();else if(state.query){$('#searchInput').value='';state.query='';if(state.view==='home')loadHome();else loadCollection();}};
-document.addEventListener('click',event=>{if(!event.target.closest('.search-area')&&$('#searchForm').classList.contains('open')&&!$('#searchInput').value.trim()){$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');}});
+$('#searchToggle').onclick=()=>{
+  closeSuggestions();
+  const open=$('#searchForm').classList.toggle('open');
+  $('#searchToggle').setAttribute('aria-expanded',open);
+  if(open){$('#searchInput').focus();}
+  else if(state.query){clearActiveSearch();}
+};
+document.addEventListener('click',event=>{
+  if(!event.target.closest('.search-area')&&$('#searchForm').classList.contains('open')&&!$('#searchInput').value.trim()){
+    $('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');
+  }
+  if(!event.target.closest('#dashboardSearchBox')&&!$('#searchSuggestions').hidden){
+    closeSuggestions();
+  }
+});
 $('#searchInput').addEventListener('keydown',event=>{if(event.key==='Escape'){$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');$('#searchToggle').focus();}});
 $('#resetFilters').onclick=()=>setView(state.view==='actors'?'actors':'home');$('#retryCatalog').onclick=()=>{if(state.view==='actor'&&state.person)openActor(state.person);else if(state.view==='home'&&!state.query.trim()&&state.genre==='all'){state.home=null;loadHome();}else loadCollection();};$('#loadMore').onclick=()=>loadCollection({append:true});
 $('#heroPlay').onclick=()=>openPlayer(state.featured||fallbackCatalog[0]);$('#heroInfo').onclick=()=>openDetails(state.featured||fallbackCatalog[0]);$('#heroSave').onclick=()=>toggleSave(state.featured||fallbackCatalog[0]);
@@ -351,11 +741,20 @@ document.querySelectorAll('.wordmark').forEach(link=>link.onclick=event=>{if(win
 
 window.addEventListener('cinema:feature',event=>updateHero(event.detail));
 window.addEventListener('member:signed-in',()=>{loadSaved();loadRecent();setView('home');});
-window.addEventListener('member:signed-out',()=>{++state.request;++state.logoRequest;++playback.request;playbackMonitor.stop();playback.owner='';clearTimeout(searchTimer);window.cinema.stop();state.selected=null;state.playing=null;state.featured=null;state.loading=false;state.home=null;state.person=null;state.error='';state.items=[];$('#actorProfile').replaceChildren();$('#actorGrid').replaceChildren();state.recent=[];state.saved.clear();state.query='';$('#searchInput').value='';});
-document.addEventListener('keydown',event=>{if(!window.memberAuth.isAuthenticated()||document.querySelector('dialog[open]')||event.ctrlKey||event.metaKey||event.altKey||/input|textarea|select/i.test(event.target.tagName))return;if(event.key==='/'){event.preventDefault();$('#searchForm').classList.add('open');$('#searchToggle').setAttribute('aria-expanded','true');$('#searchInput').focus();}});
+window.addEventListener('member:signed-out',()=>{++state.request;++state.logoRequest;++state.suggestRequest;++playback.request;playbackMonitor.stop();playback.owner='';clearTimeout(searchTimer);clearTimeout(suggestTimer);closeSuggestions();window.cinema.stop();state.selected=null;state.playing=null;state.featured=null;state.loading=false;state.home=null;state.person=null;state.error='';state.items=[];$('#actorProfile').replaceChildren();$('#actorGrid').replaceChildren();state.recent=[];state.saved.clear();state.query='';syncSearchInputs('');syncSearchScope('all');});
+document.addEventListener('keydown',event=>{
+  if(!window.memberAuth.isAuthenticated()||document.querySelector('dialog[open]')||event.ctrlKey||event.metaKey||event.altKey||/input|textarea|select/i.test(event.target.tagName))return;
+  if(event.key==='/'){
+    event.preventDefault();
+    if(!$('#dashboardSearchHub').hidden){
+      $('#dashboardSearchInput').scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+      $('#dashboardSearchInput').focus();
+    }else{
+      $('#searchForm').classList.add('open');$('#searchToggle').setAttribute('aria-expanded','true');$('#searchInput').focus();
+    }
+  }
+});
 window.addEventListener('storage',event=>{if(window.memberAuth.isAuthenticated()&&event.key===`blue-maruya-history:${window.memberAuth.currentMember().username}`){loadRecent();render();}});
-
-
 
 const movieGenres=['Action','Adventure','Animation','Comedy','Crime','Documentary','Drama','Family','Fantasy','History','Horror','Music','Mystery','Romance','Sci-Fi','Thriller','TV Movie','War','Western'];
 const tvGenres=['Action','Animation','Comedy','Crime','Documentary','Drama','Family','Kids','Mystery','News','Reality','Sci-Fi','Soap','Talk','War','Western'];
@@ -375,8 +774,9 @@ function createActorCard(person,compact=false){
   button.append(portrait,name,sub);button.onclick=()=>{if($('#details').open)closeDetails();openActor(person);};return button;
 }
 async function openActor(person){
-  clearTimeout(searchTimer);state.view='actor';state.person=person;state.items=[];state.query='';state.genre='all';state.sort='default';state.page=1;state.totalPages=1;state.error='';state.loading=true;
-  $('#searchInput').value='';$('#searchInput').placeholder='Search this filmography';$('#searchInput').setAttribute('aria-label','Search this filmography');$('#sortSelect').value='default';configureGenres('actor');syncNavigation();
+  clearTimeout(searchTimer);clearTimeout(suggestTimer);closeSuggestions();
+  state.view='actor';state.person=person;state.items=[];state.query='';state.genre='all';state.sort='default';state.page=1;state.totalPages=1;state.error='';state.loading=true;
+  syncSearchInputs('');$('#searchInput').placeholder='Search this filmography';$('#searchInput').setAttribute('aria-label','Search this filmography');$('#sortSelect').value='default';configureGenres('actor');syncNavigation();
   document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre==='all';button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});
   function profile(value){
     const back=document.createElement('button');back.className='button button-secondary';back.textContent='Back to actors';back.onclick=()=>setView('actors');
