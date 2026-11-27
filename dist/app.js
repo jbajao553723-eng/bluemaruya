@@ -52,6 +52,7 @@ function updateSaveButtons(){
   $('#heroSave').setAttribute('aria-pressed',heroSaved);
   $('#heroSave').setAttribute('aria-label',`${heroSaved?'Remove':'Add'} ${hero.title} ${heroSaved?'from':'to'} my list`);
   $('#listCount').textContent=state.saved.size;$('#listCount').hidden=!state.saved.size;
+  requestAnimationFrame(updateNavIndicator);
   $('#dashboardSavedCount').textContent=state.saved.size;$('#dashboardRecentCount').textContent=state.recent.length;
   if(state.selected){const selectedSaved=state.saved.has(keyFor(state.selected));$('#detailSave').textContent=selectedSaved?'✓ In my list':'Add to my list';$('#detailSave').setAttribute('aria-pressed',selectedSaved);}
 }
@@ -61,9 +62,9 @@ function createCard(movie,{recent=false,landscape=false,top10=false}={}){
   const article=document.createElement('article');
   article.className=`movie-card ${wide?'landscape-card':'poster-card'}${wide&&!movie.backdrop?' no-backdrop':''}`;
   const art=wide?assetUrl(movie.backdrop||movie.image):assetUrl(movie.image);
-  const genres=(movie.genres||[]).slice(0,3).map(escapeHtml).join(' <span aria-hidden="true">•</span> ');
   const saved=state.saved.has(keyFor(movie));
-  article.innerHTML=`<button class="poster-button" aria-label="Details for ${escapeHtml(movie.title)}"><img src="${escapeHtml(art)}" alt="${escapeHtml(movie.title)} poster" loading="lazy" width="${wide?480:300}" height="${wide?270:450}"><span class="media-badge">${movie.type==='tv'?'SERIES':'MOVIE'}</span>${wide?`<span class="card-art-title">${escapeHtml(movie.title)}</span>`:''}${top10?'<span class="top10-badge" aria-hidden="true"><small>TOP</small>10</span>':''}<span class="poster-play">${icons.play}</span></button><div class="card-bottom"><div class="card-text"><button class="card-title">${escapeHtml(movie.title)}</button><p class="card-meta">${escapeHtml(movie.year||'Coming soon')} <span aria-hidden="true">·</span> ${escapeHtml(movie.rating||movie.runtime||(movie.type==='tv'?'Series':'Movie'))}</p>${genres?`<p class="card-genres">${genres}</p>`:''}</div><button class="card-save" aria-label="${saved?'Remove':'Add'} ${escapeHtml(movie.title)} ${saved?'from':'to'} my list" aria-pressed="${saved}">${saved?icons.check:icons.plus}</button></div>`;
+  const subtitleParts=[movie.year||'Coming soon',movie.genres?.[0]||(movie.type==='tv'?'Series':'Movie')].filter(Boolean);
+  article.innerHTML=`<div class="poster-wrap"><button class="poster-button" aria-label="Details for ${escapeHtml(movie.title)}"><img src="${escapeHtml(art)}" alt="${escapeHtml(movie.title)} poster" loading="lazy" width="${wide?480:300}" height="${wide?270:450}"><span class="media-badge">${movie.type==='tv'?'SERIES':'MOVIE'}</span>${top10?'<span class="top10-badge" aria-hidden="true"><small>TOP</small>10</span>':''}<span class="poster-play">${icons.play}</span></button><div class="card-hover-actions"><button class="card-quick-play" aria-label="${recent&&movie.type==='tv'?'Resume':'Play'} ${escapeHtml(movie.title)}${recent&&movie.type==='tv'?` season ${movie.season}, episode ${movie.episode}`:''}">${icons.play}</button><button class="card-save" aria-label="${saved?'Remove':'Add'} ${escapeHtml(movie.title)} ${saved?'from':'to'} my list" aria-pressed="${saved}">${saved?icons.check:icons.plus}</button></div></div><div class="card-bottom"><button class="card-title">${escapeHtml(movie.title)}</button><p class="card-meta">${subtitleParts.map(escapeHtml).join(' <span aria-hidden="true">·</span> ')}</p></div>`;
   article.querySelector('.poster-button').onclick=()=>openDetails(movie);
   const image=article.querySelector('img');
   image.addEventListener('error',()=>{if(!image.dataset.fallback){image.dataset.fallback='true';image.src='assets/noir-hero.png';}});
@@ -71,16 +72,13 @@ function createCard(movie,{recent=false,landscape=false,top10=false}={}){
   if(movie.rating?.startsWith('★')){const score=document.createElement('span');score.className='score-badge';score.textContent=movie.rating;article.querySelector('.poster-button').append(score);}
   article.querySelector('.card-title').onclick=()=>openDetails(movie);
   article.querySelector('.card-save').onclick=()=>toggleSave(movie);
-  const quickPlay=document.createElement('button');quickPlay.className='card-quick-play';quickPlay.innerHTML=icons.play;
-  quickPlay.setAttribute('aria-label',`${recent&&movie.type==='tv'?'Resume':'Play'} ${movie.title}${recent&&movie.type==='tv'?` season ${movie.season}, episode ${movie.episode}`:''}`);
-  quickPlay.onclick=()=>openPlayer(movie,recent?movie:null);
-  article.querySelector('.card-bottom').append(quickPlay);
+  article.querySelector('.card-quick-play').onclick=()=>openPlayer(movie,recent?movie:null);
   if(recent){
     article.classList.add('recent-card');image.src=assetUrl(movie.backdrop||movie.image);
     const meta=article.querySelector('.card-meta');meta.textContent=(movie.type==='tv'?`S${movie.season} · E${movie.episode}`:`${movie.year||'Movie'}`)+(movie.time>15&&!movie.completed?` · Resume ${timeLabel(movie.time)}`:' · Play again');
     if(movie.duration>0){const progress=document.createElement('span');progress.className='watch-progress';progress.setAttribute('aria-label',`${Math.min(100,Math.round(movie.time/movie.duration*100))}% watched`);const fill=document.createElement('span');fill.style.width=`${Math.min(100,movie.time/movie.duration*100)}%`;progress.append(fill);article.querySelector('.poster-button').append(progress);}
     const stamp=document.createElement('span');stamp.className='watched-stamp';stamp.textContent=recentLabel(movie.watchedAt);article.querySelector('.poster-button').append(stamp);
-    const remove=document.createElement('button');remove.className='history-remove';remove.textContent='×';remove.setAttribute('aria-label',`Remove ${movie.title} from recently watched`);remove.onclick=()=>removeRecent(movie);article.append(remove);
+    const remove=document.createElement('button');remove.className='history-remove';remove.textContent='×';remove.setAttribute('aria-label',`Remove ${movie.title} from recently watched`);remove.onclick=()=>removeRecent(movie);article.querySelector('.poster-wrap').append(remove);
   }
   return article;
 }
@@ -118,9 +116,11 @@ function createPreferences(){
 
 function updateHero(movie){
   if(!movie)return;
+  const changed=!state.featured||keyFor(state.featured)!==keyFor(movie);
   state.featured=movie;
   window.cinema.updateBackdrop(assetUrl(movie.backdrop||movie.image));
   const content=$('.hero-content');content.classList.toggle('long-title',movie.title.length>17);content.classList.toggle('very-long-title',movie.title.length>30);
+  if(changed){content.classList.remove('is-entering');void content.offsetWidth;content.classList.add('is-entering');}
   const kindText=$('#heroKindText');if(kindText)kindText.textContent=movie.type==='tv'?'SERIES':'FILM';
   $('#heroTitleText').textContent=movie.title;
   const request=++state.logoRequest;$('#heroTitle').classList.remove('has-title-logo');$('#heroLogo').hidden=true;$('#heroLogo').removeAttribute('src');
@@ -146,13 +146,14 @@ async function loadTitleLogo(movie,request){
 }
 function sortedItems(items){const sorted=[...items];if(state.sort==='title')sorted.sort((a,b)=>a.title.localeCompare(b.title));else if(state.sort==='year')sorted.sort((a,b)=>(b.year||0)-(a.year||0));else if(state.sort==='rating')sorted.sort((a,b)=>ratingScore(b)-ratingScore(a));return sorted;}
 function ratingScore(movie){return movie.rating?.startsWith('★')?Number.parseFloat(movie.rating.slice(1))||0:0;}
-function renderGrid(items){const grid=$('#catalogGrid');grid.classList.toggle('history-grid',state.view==='recent');grid.replaceChildren(...sortedItems(items).map(movie=>{const column=document.createElement('div');column.className='col';column.append(createCard(movie,{recent:state.view==='recent',landscape:true}));return column;}));}
+function renderGrid(items){const grid=$('#catalogGrid');grid.classList.toggle('history-grid',state.view==='recent');grid.replaceChildren(...sortedItems(items).map((movie,index)=>{const column=document.createElement('div');column.className='col';column.style.setProperty('--stagger',String(Math.min(index,12)));column.append(createCard(movie,{recent:state.view==='recent',landscape:true}));return column;}));}
 function matchesGenre(movie){if(state.genre==='all')return true;const aliases={'Sci-Fi':['Science Fiction','Sci-Fi','Sci-Fi & Fantasy'],'Action':['Action','Action & Adventure'],'Adventure':['Adventure','Action & Adventure'],'Fantasy':['Fantasy','Sci-Fi & Fantasy'],'War':['War','War & Politics']};return movie.genres?.some(genre=>(aliases[state.genre]||[state.genre]).includes(genre));}
 function filterSaved(){const query=state.query.toLowerCase().trim();return [...state.saved.values()].filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
 function filterRecent(){const query=state.query.toLowerCase().trim();return state.recent.filter(movie=>matchesGenre(movie)&&(!query||`${movie.title} ${movie.year} ${(movie.genres||[]).join(' ')}`.toLowerCase().includes(query)));}
 function render(){
   const homeMode=state.view==='home'&&!state.query.trim()&&state.genre==='all';
   const peopleMode=state.view==='actors';
+  $('#nav').classList.toggle('is-solid',!homeMode);
   $('#browse').dataset.home=String(homeMode);
   $('#actorGrid').hidden=!peopleMode;$('#surpriseButton').hidden=!homeMode;$('#loadMore').firstChild.textContent=peopleMode?'More actors ':'More stories ';
   $('#actorGrid').replaceChildren();
@@ -184,10 +185,11 @@ function render(){
     if(isKristine())createPreferences();
     createShelf('Popular Series','Your next series obsession.',tvList,false,{landscape:true,top10Keys});
     createRecentShelf();
+    document.querySelectorAll('#continueShelf .shelf, #shelves .shelf').forEach((shelf,index)=>shelf.style.setProperty('--stagger',String(Math.min(index,6))));
     $('#browseTitle').textContent=isKristine()?'A good story for every mood.':'Find something you’ll love.';
   }else{
-    if(peopleMode)$('#actorGrid').replaceChildren(...items.map(createActorCard)); else renderGrid(items);
-    $('#browseTitle').textContent=state.query.trim()?`Results for “${state.query.trim()}”`:({movie:'Explore popular movies.',tv:'Find your next series.',saved:'Your next watches, all here.',recent:'Your recent movie nights.',actors:'Explore actors.',actor:state.person?`Starring ${state.person.name}`:'Actor filmography',home:'Explore the collection.'}[state.view]);
+    if(peopleMode)$('#actorGrid').replaceChildren(...items.map((person,index)=>{const card=createActorCard(person);card.style.setProperty('--stagger',String(Math.min(index,12)));return card;})); else renderGrid(items);
+    $('#browseTitle').textContent=state.query.trim()?`Results for “${state.query.trim()}”`:({movie:'Movies',tv:'Series',saved:'My List',recent:'Recently Watched',actors:'Actors',actor:state.person?`Starring ${state.person.name}`:'Actor filmography',home:'Explore'}[state.view]);
   }
   const hasItems=homeMode||items.length>0;
   $('#empty').hidden=hasItems||state.loading||!!state.error;
@@ -228,9 +230,28 @@ async function loadCollection({append=false}={}){
   }catch{if(request!==state.request)return;if(!append)state.items=[];state.error=state.view==='actors'?'Actor discovery is temporarily unavailable. Try again in a moment.':'The live catalog is temporarily unavailable. Try again in a moment.';}
   finally{if(request===state.request){state.loading=false;render();}}
 }
-function setGenre(genre){state.error='';state.genre=genre;$('#genre').value=genre;document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre===genre;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});if(state.view==='home'&&genre!=='all'){state.view=tvGenres.includes(genre)&&!movieGenres.includes(genre)?'tv':'movie';configureGenres(state.view);$('#genre').value=genre;}syncNavigation();if(state.view==='home'&&!state.query.trim())loadHome();else loadCollection();}
-function syncNavigation(){document.querySelectorAll('.nav-links [data-view]').forEach(button=>{const active=button.dataset.view===(state.view==='actor'?'actors':state.view);button.classList.toggle('active',active);active?button.setAttribute('aria-current','page'):button.removeAttribute('aria-current');});}
-function setView(view){clearTimeout(searchTimer);state.error='';state.person=null;state.view=view;configureGenres(view);$('#searchInput').placeholder=view==='actors'?'Search actors by name':'Find a movie or series';$('#searchInput').setAttribute('aria-label',view==='actors'?'Search actors':'Search movies and series');state.items=[];state.query='';state.genre='all';state.sort='default';$('#sortSelect').value='default';$('#searchInput').value='';$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');$('#genre').value='all';document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre==='all';button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});syncNavigation();if(view==='home')loadHome();else loadCollection();window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
+function pulseNavProgress(){
+  const bar=$('#navProgress');if(!bar)return;
+  bar.classList.remove('is-running');void bar.offsetWidth;bar.classList.add('is-running');
+}
+function animateViewTransition(){
+  for(const target of [$('#home'),$('#continueShelf'),$('#browse')]){
+    if(!target||target.hidden)continue;
+    target.classList.remove('view-animate');void target.offsetWidth;target.classList.add('view-animate');
+  }
+}
+function updateNavIndicator(){
+  const indicator=$('#navIndicator');const nav=$('.nav-links');const active=$('.nav-links .nav-link.active');
+  if(!indicator||!nav||!active||window.innerWidth<768){if(indicator)indicator.classList.remove('is-ready');return;}
+  const navRect=nav.getBoundingClientRect();const btnRect=active.getBoundingClientRect();
+  if(!btnRect.width)return;
+  indicator.style.width=`${btnRect.width}px`;
+  indicator.style.transform=`translateX(${btnRect.left-navRect.left}px)`;
+  indicator.classList.add('is-ready');
+}
+function setGenre(genre){state.error='';state.genre=genre;$('#genre').value=genre;document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre===genre;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});if(state.view==='home'&&genre!=='all'){state.view=tvGenres.includes(genre)&&!movieGenres.includes(genre)?'tv':'movie';configureGenres(state.view);$('#genre').value=genre;}syncNavigation();pulseNavProgress();if(state.view==='home'&&!state.query.trim())loadHome();else loadCollection();animateViewTransition();}
+function syncNavigation(){document.querySelectorAll('.nav-links [data-view]').forEach(button=>{const active=button.dataset.view===(state.view==='actor'?'actors':state.view);button.classList.toggle('active',active);active?button.setAttribute('aria-current','page'):button.removeAttribute('aria-current');});requestAnimationFrame(updateNavIndicator);}
+function setView(view){clearTimeout(searchTimer);state.error='';state.person=null;state.view=view;configureGenres(view);$('#searchInput').placeholder=view==='actors'?'Search actors by name':'Find a movie or series';$('#searchInput').setAttribute('aria-label',view==='actors'?'Search actors':'Search movies and series');state.items=[];state.query='';state.genre='all';state.sort='default';$('#sortSelect').value='default';$('#searchInput').value='';$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');$('#genre').value='all';document.querySelectorAll('[data-genre]').forEach(button=>{const active=button.dataset.genre==='all';button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});syncNavigation();pulseNavProgress();if(view==='home')loadHome();else loadCollection();animateViewTransition();window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
 
 function fillDetails(movie){
   $('#detailTitle').textContent=movie.title;$('#detailType').textContent=movie.type==='tv'?'SERIES':'MOVIE';
@@ -314,7 +335,9 @@ $('#sortSelect').onchange=event=>{state.sort=event.target.value;render();};
 function surpriseMovie(){const pool=[...(state.home?.movies||fallbackCatalog.filter(movie=>movie.type==='movie')),...state.saved.values()].filter(movie=>movie.type==='movie');const unseen=pool.filter(movie=>!state.recent.some(entry=>keyFor(entry)===keyFor(movie)));const choices=unseen.length?unseen:pool;openDetails(choices[Math.floor(Math.random()*choices.length)]);}
 $('#surpriseButton').onclick=surpriseMovie;$('#dockSurprise').onclick=surpriseMovie;if($('#heroShuffle'))$('#heroShuffle').onclick=surpriseMovie;
 $('#resumeLatest').onclick=()=>{const movie=state.recent.find(item=>item.time>15&&!item.completed);if(movie)openPlayer(movie,movie);};
-$('#searchToggle').onclick=()=>{const open=$('#searchForm').classList.toggle('open');$('#searchToggle').setAttribute('aria-expanded',open);if(open)$('#searchInput').focus();};
+$('#searchToggle').onclick=()=>{const open=$('#searchForm').classList.toggle('open');$('#searchToggle').setAttribute('aria-expanded',open);if(open)$('#searchInput').focus();else if(state.query){$('#searchInput').value='';state.query='';if(state.view==='home')loadHome();else loadCollection();}};
+document.addEventListener('click',event=>{if(!event.target.closest('.search-area')&&$('#searchForm').classList.contains('open')&&!$('#searchInput').value.trim()){$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');}});
+$('#searchInput').addEventListener('keydown',event=>{if(event.key==='Escape'){$('#searchForm').classList.remove('open');$('#searchToggle').setAttribute('aria-expanded','false');$('#searchToggle').focus();}});
 $('#resetFilters').onclick=()=>setView(state.view==='actors'?'actors':'home');$('#retryCatalog').onclick=()=>{if(state.view==='actor'&&state.person)openActor(state.person);else if(state.view==='home'&&!state.query.trim()&&state.genre==='all'){state.home=null;loadHome();}else loadCollection();};$('#loadMore').onclick=()=>loadCollection({append:true});
 $('#heroPlay').onclick=()=>openPlayer(state.featured||fallbackCatalog[0]);$('#heroInfo').onclick=()=>openDetails(state.featured||fallbackCatalog[0]);$('#heroSave').onclick=()=>toggleSave(state.featured||fallbackCatalog[0]);
 $('#detailSave').onclick=()=>toggleSave(state.selected);$('#detailPlay').onclick=()=>openPlayer(state.selected);$('#closeDetails').onclick=closeDetails;$('#closePlayer').onclick=closePlayer;
@@ -324,7 +347,7 @@ $('#retryPlayer').onclick=()=>loadPlayer({time:playback.time,duration:playback.d
 $('#pressPlay').onclick=()=>$('#player').contentWindow?.postMessage({type:'cinesrc:command',command:'play',args:[]},window.playerKit.ORIGIN);
 $('#nextEpisode').onclick=()=>{savePlayback(true);if($('#episodeSelect').selectedIndex<$('#episodeSelect').options.length-1)$('#episodeSelect').selectedIndex++;else if($('#seasonSelect').selectedIndex<$('#seasonSelect').options.length-1){$('#seasonSelect').selectedIndex++;populateEpisodes();}loadPlayer();};
 for(const[selector,close]of[['#details',closeDetails],['#playerDialog',closePlayer]]){const dialog=$(selector);dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('click',event=>{const rect=dialog.getBoundingClientRect();if(event.target===dialog&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom))close();});}
-document.querySelectorAll('.wordmark').forEach(link=>link.onclick=event=>{if(window.memberAuth.isAuthenticated()){event.preventDefault();setView('home');}});addEventListener('scroll',()=>$('#nav').classList.toggle('scrolled',scrollY>20),{passive:true});
+document.querySelectorAll('.wordmark').forEach(link=>link.onclick=event=>{if(window.memberAuth.isAuthenticated()){event.preventDefault();setView('home');}});addEventListener('scroll',()=>$('#nav').classList.toggle('scrolled',scrollY>20),{passive:true});addEventListener('resize',updateNavIndicator,{passive:true});document.fonts?.ready.then(updateNavIndicator);
 
 window.addEventListener('cinema:feature',event=>updateHero(event.detail));
 window.addEventListener('member:signed-in',()=>{loadSaved();loadRecent();setView('home');});
@@ -361,7 +384,7 @@ async function openActor(person){
     const bio=document.createElement('p');bio.textContent=value.biography||'Explore movies and series featuring '+value.name+'.';
     const text=document.createElement('div');text.append(back,name,bio);$('#actorProfile').replaceChildren(text);
   }
-  profile(person);render();window.scrollTo({top:0,behavior:'instant'});const request=++state.request;
+  profile(person);pulseNavProgress();render();animateViewTransition();window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});const request=++state.request;
   try{const data=await requestCatalog({mode:'person',id:person.id});if(request!==state.request)return;state.person=data.person;state.items=data.results;profile(data.person);}
   catch{if(request!==state.request)return;state.error='This filmography could not load. Please try again.';}
   finally{if(request===state.request){state.loading=false;render();}}
